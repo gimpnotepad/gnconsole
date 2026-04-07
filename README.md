@@ -1,0 +1,2 @@
+# gnconsole
+Gimpnotepad's console
