@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <windows.h>
+#include "gndll.h" // check on https://github.com/gimpnotepad/gndll/releases/
 
 std::map<std::string,std::string> en = {
 	{"about", "Gimpnotepad's Console, 2026."},
@@ -12,7 +13,10 @@ std::map<std::string,std::string> en = {
 	{"help", R"(==== HELP ====
 lang | change the language
 exit | exit the program
-help | show this list)"}
+help | show this list
+about | about this program
+systeminfo | info about system)"},
+	{"on", "on"}
 };
 std::map<std::string,std::string> de = {
 	{"about", "Gimpnotizbuch-Konsole, 2026."},
@@ -20,7 +24,10 @@ std::map<std::string,std::string> de = {
 	{"help", R"(==== HELP ====
 lang | Sprache aendern
 exit | Programm beenden
-help | Hilfe anzeigen)"}
+help | Hilfe anzeigen
+about | ueber Programm
+systeminfo | Informationen zum System)"},
+	{"on", "auf"}
 };
 std::map<std::string,std::string> ru = {
 	{"about", "Konsol' gimpbloknota, 2026."},
@@ -28,7 +35,10 @@ std::map<std::string,std::string> ru = {
 	{"help", R"(==== HELP ====
 lang | smenit' yazik
 exit | viyti s programmy
-help | pokazat' etot spisok)"}
+help | pokazat' etot spisok
+about | ob etoy programme
+systeminfo | informatsiya ob sisteme)"},
+	{"on", "na"}
 };
 
 int lang = 0;
@@ -139,6 +149,12 @@ int main(){
 			return 0;
 		} else if (inp == "help") {
 			std::cout << findstr("help") << std::endl;
+		} else if (inp == "about") {
+			std::cout << findstr("about") << std::endl;
+		} else if (inp.empty()) {
+			;
+		} else if (inp == "systeminfo") {
+			std::cout << get_pc_name() << "@" << get_user_name() << " " << findstr("on") << " " << get_nt_ver() << " " << get_sysarch() << std::endl;
 		}
 	}
 }
