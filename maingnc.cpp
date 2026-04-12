@@ -1,4 +1,4 @@
-#include <iostream>
+#include <stdio.h>
 #include <map>
 #include <string>
 #include <filesystem>
@@ -20,24 +20,24 @@ systeminfo | info about system)"},
 };
 std::map<std::string,std::string> de = {
 	{"about", "Gimpnotizbuch-Konsole, 2026."},
-	{"lang", "Sprache aeuswahlen:"},
+	{"lang", "Sprache auswählen:"},
 	{"help", R"(==== HELP ====
-lang | Sprache aendern
+lang | Sprache ändern
 exit | Programm beenden
 help | Hilfe anzeigen
-about | ueber Programm
-systeminfo | Informationen zum System)"},
+about | über Programm
+systeminfo | Systeminformationen)"},
 	{"on", "auf"}
 };
 std::map<std::string,std::string> ru = {
-	{"about", "Konsol' gimpbloknota, 2026."},
-	{"lang", "Vyberi yazik:"},
+	{"about", "Консоль ГимпБлокнота, 2026."},
+	{"lang", "Выбери язык:"},
 	{"help", R"(==== HELP ====
-lang | smenit' yazik
-exit | viyti s programmy
-help | pokazat' etot spisok
-about | ob etoy programme
-systeminfo | informatsiya ob sisteme)"},
+lang | сменить язык
+exit | выйти из программы
+help | показать этот список
+about | об этой программе
+systeminfo | информация о системе)"},
 	{"on", "na"}
 };
 
@@ -87,6 +87,8 @@ void changef(std::filesystem::path setf, std::string a, std::string b){
 }
 
 int main(){
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
 	std::filesystem::path setf = "settings.gnc";
 	if (!std::filesystem::exists(setf)){
 		std::ofstream setfo(setf);
@@ -97,21 +99,21 @@ int main(){
 		if (setfi) {
 			while (std::getline(setfi,l)){
 				if (debug) {
-				std::cout << l << "\n";
+				printf("%s\n", l.c_str());
 					for (char c : l){
-						std::cout << (int)(unsigned char)c << " ";
+						printf("%d ", (int)(unsigned char)c);
 					}
-					std::cout << "\n";
+					printf("\n");
 				}
 				if (l.rfind("\xFF\xBB\xBF", 0) == 0) l.erase(0,3);
 				if (!l.empty() && l.back() == '\r') l.pop_back();
 				if (l.empty()) continue;
 				auto p = l.find('=');
-				if (debug) std::cout << p << "\n";
+				if (debug) printf("%d\n", p);
 				if (p != std::string::npos){
 					std::string k = l.substr(0,p);
 					std::string v = l.substr(p+1);
-					if (debug) std::cout << k << " " << v << "\n";
+					if (debug) printf("%s %s\n", k.c_str(), v.c_str());
 					if (k == "lang") {
 						if (v == "de") lang = 1;
 						else if (v == "ru") lang = 2;
@@ -127,34 +129,34 @@ int main(){
 			}
 		}
 	}
-	std::cout << findstr("about") << "\n";
-	std::string inp;
+	printf("%s\n", findstr("about").c_str());
+	char inp[1024];
 	while (true){
-		std::cout << name << ">";
-		std::getline(std::cin, inp);
-		if (inp == "lang"){
-			std::cout << findstr("lang");
-			std::getline(std::cin, inp);
-			if (inp == "en") {
+		printf("%s>", name.c_str());
+		scanf("%1024s", &inp);
+		if (strcmp(inp, "lang") == 0){
+			printf("%s\n",findstr("lang").c_str());
+			scanf("%2s", inp);
+			if (strcmp(inp, "en") == 0) {
 				changef(setf,"lang=","lang=en");
 				lang=0;			
-			} else if (inp == "de") {
+			} else if (strcmp(inp, "de") == 0) {
 				changef(setf,"lang=","lang=de");
 				lang=1;
-			} else if (inp == "ru") {
+			} else if (strcmp(inp, "ru") == 0) {
 				changef(setf,"lang=","lang=ru");
 				lang=2;
 			}
-		} else if (inp == "exit") {
+		} else if (strcmp(inp, "exit") == 0) {
 			return 0;
-		} else if (inp == "help") {
-			std::cout << findstr("help") << std::endl;
-		} else if (inp == "about") {
-			std::cout << findstr("about") << std::endl;
-		} else if (inp.empty()) {
+		} else if (strcmp(inp, "help") == 0) {
+			printf("%s\n", findstr("help").c_str());
+		} else if (strcmp(inp, "about") == 0) {
+			printf("%s\n", findstr("about").c_str());
+		} else if (inp[0] == '\0') {
 			;
-		} else if (inp == "systeminfo") {
-			std::cout << get_pc_name() << "@" << get_user_name() << " " << findstr("on") << " " << get_nt_ver() << " " << get_sysarch() << std::endl;
+		} else if (strcmp(inp, "systeminfo") == 0) {
+			printf("%s@%s %s %s %s\n", get_pc_name(), get_user_name(), findstr("on").c_str(), get_nt_ver(), get_sysarch());
 		}
 	}
 }
