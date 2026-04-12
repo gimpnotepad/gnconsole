@@ -15,8 +15,16 @@ lang | change the language
 exit | exit the program
 help | show this list
 about | about this program
-systeminfo | info about system)"},
-	{"on", "on"}
+systeminfo | info about system
+random [min] [max] | random number
+color [num] | change console color
+cls | clear screen)"},
+	{"on", "on"},
+	{"info", "Information"},
+	{"warn", "Warning"},
+	{"err", "Error"},
+	{"log:loaded", "Program loaded!"},
+	{"log:nulllang", "No such language"},
 };
 std::map<std::string,std::string> de = {
 	{"about", "Gimpnotizbuch-Konsole, 2026."},
@@ -26,8 +34,16 @@ lang | Sprache ändern
 exit | Programm beenden
 help | Hilfe anzeigen
 about | über Programm
-systeminfo | Systeminformationen)"},
-	{"on", "auf"}
+systeminfo | Systeminformationen
+random [min] [max] | Zufallszahl
+color [num] | Konsolenfarbe ändern
+cls | Bildschirm löschen)"},
+	{"on", "auf"},
+	{"info", "Info"},
+	{"warn", "Warnung"},
+	{"err", "Fehler"},
+	{"log:loaded", "Programm geladen!"},
+	{"log:nulllang", "Keine solche Sprache"},
 };
 std::map<std::string,std::string> ru = {
 	{"about", "Консоль ГимпБлокнота, 2026."},
@@ -37,13 +53,22 @@ lang | сменить язык
 exit | выйти из программы
 help | показать этот список
 about | об этой программе
-systeminfo | информация о системе)"},
-	{"on", "na"}
+systeminfo | информация о системе
+random [min] [max] | случайное число
+color [num] | сменить цвет консоли
+cls | очистить экран)"},
+	{"on", "на"},
+	{"info", "Информация"},
+	{"warn", "Предупреждение"},
+	{"err", "Ошибка"},
+	{"log:loaded", "Программа загрузилась!"},
+	{"log:nulllang", "Нету такого языка"},
 };
 
 int lang = 0;
 bool debug = 0;
 std::string name = "gnc";
+int color = 7;
 
 std::string findstr(std::string str){
 	if (lang == 0) {
@@ -92,7 +117,7 @@ int main(){
 	std::filesystem::path setf = "settings.gnc";
 	if (!std::filesystem::exists(setf)){
 		std::ofstream setfo(setf);
-		setfo << "debug=0" <<"\n"<< "lang=en" << "\n";
+		setfo << "debug=0" <<"\n"<< "lang=en" << "\n" << "color=7" << "\n";
 	} else {
 		std::ifstream setfi(setf);
 		std::string l;
@@ -124,19 +149,27 @@ int main(){
 					} else if (k == "name") {
 						if (!v.empty()) name = v;
 						else name = "gnc";
+					} else if (k == "color") {
+						if (sscanf(v.c_str(), "%d", &color) == 1) {
+							set_console_color(color);
+						}
 					}
 				}
 			}
 		}
 	}
+	if (debug) printf("\n%s\n", log_message(findstr("log:loaded").c_str(), findstr("info").c_str()));
 	printf("%s\n", findstr("about").c_str());
 	char inp[1024];
+	int randmin, randmax, num;
 	while (true){
 		printf("%s>", name.c_str());
-		scanf("%1024s", &inp);
+		fgets(inp, sizeof(inp), stdin);
+		inp[strcspn(inp, "\n")] = '\0';
 		if (strcmp(inp, "lang") == 0){
 			printf("%s\n",findstr("lang").c_str());
-			scanf("%2s", inp);
+			fgets(inp, sizeof(inp), stdin);
+			inp[strcspn(inp, "\n")] = '\0';
 			if (strcmp(inp, "en") == 0) {
 				changef(setf,"lang=","lang=en");
 				lang=0;			
@@ -146,6 +179,8 @@ int main(){
 			} else if (strcmp(inp, "ru") == 0) {
 				changef(setf,"lang=","lang=ru");
 				lang=2;
+			} else {
+				if (debug) printf("%s", log_message(findstr("log:nulllang").c_str(),findstr("warn").c_str()));
 			}
 		} else if (strcmp(inp, "exit") == 0) {
 			return 0;
@@ -157,6 +192,14 @@ int main(){
 			;
 		} else if (strcmp(inp, "systeminfo") == 0) {
 			printf("%s@%s %s %s %s\n", get_pc_name(), get_user_name(), findstr("on").c_str(), get_nt_ver(), get_sysarch());
+		} else if (sscanf(inp, "random %d %d", &randmin, &randmax) == 2) {
+			printf("%d\n", randomint(randmin, randmax));
+		} else if (sscanf(inp, "color %d", &num) == 1) {
+			changef(setf, "color=", "color="+std::to_string(num));
+			color = num;
+			set_console_color(num);
+		} else if (strcmp(inp, "cls") == 0) {
+			system("cls");
 		}
 	}
 }
