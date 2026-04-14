@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <cmath>
 #include <map>
 #include <string>
 #include <filesystem>
@@ -18,13 +19,29 @@ about | about this program
 systeminfo | info about system
 random [min] [max] | random number
 color [num] | change console color
-cls | clear screen)"},
+cls | clear screen
+calc | calculator
+browser | browser)"},
 	{"on", "on"},
 	{"info", "Information"},
 	{"warn", "Warning"},
 	{"err", "Error"},
 	{"log:loaded", "Program loaded!"},
 	{"log:nulllang", "No such language"},
+	{"browser", R"(GimpNotepad Console Browser
+All websites here start with the gncb prefix, not the https prefix!
+
+It's important to remember this!
+
+Popular websites:
+gncb://gncb.run
+gncb>)"},
+	{"browser:gncbrun", R"(
+	GNCB INTRODUCTION SITE
+
+	This site was created to provide you 
+	with a virtual browser that is not HTML!
+)"},
 };
 std::map<std::string,std::string> de = {
 	{"about", "Gimpnotizbuch-Konsole, 2026."},
@@ -37,13 +54,30 @@ about | über Programm
 systeminfo | Systeminformationen
 random [min] [max] | Zufallszahl
 color [num] | Konsolenfarbe ändern
-cls | Bildschirm löschen)"},
+cls | Bildschirm löschen
+calc | Kalkulator
+browser | browser)"},
 	{"on", "auf"},
 	{"info", "Info"},
 	{"warn", "Warnung"},
 	{"err", "Fehler"},
 	{"log:loaded", "Programm geladen!"},
 	{"log:nulllang", "Keine solche Sprache"},
+	{"browser", R"(GimpNotizbuch Konsolenbrowser
+Alle Websites hier beginnen mit dem Präfix gncb, nicht mit https!
+
+Das ist wichtig zu merken!
+
+Beliebte Websites:
+gncb://gncb.run
+gncb>)"},
+	{"browser:gncbrun", R"(
+	GNKB EINFÜHRUNGSSEITE
+
+	Diese Website wurde erstellt, 
+	um Ihnen einen virtuellen Browser bereitzustellen,
+	der kein HTML ist!
+)"},
 };
 std::map<std::string,std::string> ru = {
 	{"about", "Консоль ГимпБлокнота, 2026."},
@@ -56,13 +90,29 @@ about | об этой программе
 systeminfo | информация о системе
 random [min] [max] | случайное число
 color [num] | сменить цвет консоли
-cls | очистить экран)"},
+cls | очистить экран
+calc | калькулятор
+browser | браузер)"},
 	{"on", "на"},
 	{"info", "Информация"},
 	{"warn", "Предупреждение"},
 	{"err", "Ошибка"},
 	{"log:loaded", "Программа загрузилась!"},
 	{"log:nulllang", "Нету такого языка"},
+	{"browser", R"(Браузер Консоли ГимпБлокнота
+Все сайты здесь начинаются не с префикса https, 
+а с префикса gncb! это важно запомнить!
+
+Популярные сайты:
+gncb://gncb.run
+gncb>)"},
+	{"browser:gncbrun", R"(
+	САЙТ ОЗНАКОМЛЕНИЯ БКГБ
+	
+	Этот сайт сделан ради того, чтобы предоставить
+	вам виртуальный браузер, который не является
+	HTML!
+)"},
 };
 
 int lang = 0;
@@ -162,12 +212,15 @@ int main(){
 	printf("%s\n", findstr("about").c_str());
 	char inp[1024];
 	int randmin, randmax, num;
+	double calc1, calc2;
+	char calcop[8];
+	char calcopm;
 	while (true){
 		printf("%s>", name.c_str());
 		fgets(inp, sizeof(inp), stdin);
 		inp[strcspn(inp, "\n")] = '\0';
 		if (strcmp(inp, "lang") == 0){
-			printf("%s\n",findstr("lang").c_str());
+			printf("%s",findstr("lang").c_str());
 			fgets(inp, sizeof(inp), stdin);
 			inp[strcspn(inp, "\n")] = '\0';
 			if (strcmp(inp, "en") == 0) {
@@ -200,6 +253,41 @@ int main(){
 			set_console_color(num);
 		} else if (strcmp(inp, "cls") == 0) {
 			system("cls");
+		} else if (strcmp(inp, "calc") == 0) {
+			fgets(inp, sizeof(inp), stdin);
+			inp[strcspn(inp, "\n")] = '\0';
+			if (sscanf(inp, "%lf %c %lf", &calc1, &calcopm, &calc2) == 3) {
+				if (calcopm == '+') printf("%.6lf\n", calc1+calc2);
+				else if (calcopm == '-') printf("%.6lf\n", calc1-calc2);
+				else if (calcopm == '*') printf("%.6lf\n", calc1*calc2);
+				else if (calcopm == '/') {
+					if (calc2 != 0) {
+						printf("%.6lf\n", calc1/calc2);
+					} else {
+						printf("NaN\n");
+					}
+				} else if (calcopm == '^') printf("%.6lf\n", pow(calc1,calc2));
+			} else if (sscanf(inp, "%s %lf %lf", calcop, &calc1, &calc2) == 3) {
+				if (strcmp(calcop, "nrt") == 0) {
+					if ((calc1<0 && (int)calc2 % 2 == 0) || calc2==0) {
+						printf("NaN\n");
+					} else {
+						printf("%.6lf\n", pow(calc1, (1.0/calc2)));
+					}
+				}
+			} else if (sscanf(inp, "%s %lf", calcop, &calc1) == 2) {
+				if (strcmp(calcop, "ln") == 0) {
+					if (calc1 <= 0) printf("0.000000\n");
+					printf("%.6lf\n", log(calc1));
+				} 
+			}
+		} else if (strcmp(inp, "browser") == 0) {
+			printf("%s",findstr("browser").c_str());
+			fgets(inp, sizeof(inp), stdin);
+			inp[strcspn(inp, "\n")] = '\0';
+			if (strcmp(inp, "gncb://gncb.run")==0) {
+				printf("%s",findstr("browser:gncbrun").c_str());
+			}
 		}
 	}
 }
