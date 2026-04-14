@@ -56,7 +56,7 @@ random [min] [max] | Zufallszahl
 color [num] | Konsolenfarbe ändern
 cls | Bildschirm löschen
 calc | Kalkulator
-browser | browser)"},
+browser | Browser)"},
 	{"on", "auf"},
 	{"info", "Info"},
 	{"warn", "Warnung"},
