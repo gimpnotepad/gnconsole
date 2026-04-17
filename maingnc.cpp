@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 #include <cmath>
 #include <map>
 #include <string>
@@ -21,7 +23,8 @@ random [min] [max] | random number
 color [num] | change console color
 cls | clear screen
 calc | calculator
-browser | browser)"},
+browser | browser
+ai | ai test)"},
 	{"on", "on"},
 	{"info", "Information"},
 	{"warn", "Warning"},
@@ -56,7 +59,8 @@ random [min] [max] | Zufallszahl
 color [num] | Konsolenfarbe ändern
 cls | Bildschirm löschen
 calc | Kalkulator
-browser | Browser)"},
+browser | Browser
+ai | KI-Test)"},
 	{"on", "auf"},
 	{"info", "Info"},
 	{"warn", "Warnung"},
@@ -92,7 +96,8 @@ random [min] [max] | случайное число
 color [num] | сменить цвет консоли
 cls | очистить экран
 calc | калькулятор
-browser | браузер)"},
+browser | браузер
+ai | тест ии)"},
 	{"on", "на"},
 	{"info", "Информация"},
 	{"warn", "Предупреждение"},
@@ -159,6 +164,73 @@ void changef(std::filesystem::path setf, std::string a, std::string b){
 		setfo << l << "\n";
 	}
 	setfo.close();
+}
+
+namespace ai {
+	double sigmoid(double x) {
+		return 1.0 / (1.0 + exp(-x));
+	}
+
+	double sigmoid_derivative(double x) {
+		return x * (1.0 - x);
+	}
+	void train(double* in, int sn, double* exc, double* w1, double* w2, double* b1, double* b2, int inn, int hn, int outn, int ep, double lr) {
+		for (int epoch = 0; epoch < ep; epoch++) {
+			for (int i = 0; i<sn; i++) {
+				double* px = in + i * inn;
+				double* ex = exc + i * outn;
+				double* h = new double[hn];
+				for (int j = 0; j < hn; j++) {
+					double sum = b1[j];
+					for (int k = 0; k < inn; k++) sum += px[k] * w1[k*hn+j];
+					h[j] = ai::sigmoid(sum);
+				}
+				double* out = new double[outn];
+				for (int j = 0; j < outn; j++) {
+					double sum = b2[j];
+					for (int k = 0; k < hn; k++) sum += h[k] * w2[k*outn+j];
+					out[j] = ai::sigmoid(sum);
+				}
+				double* d_out = new double[outn];
+				for (int j = 0; j < outn; j++) {
+					double err = ex[j] - out[j];
+					d_out[j] = err * ai::sigmoid_derivative(out[j]);
+					b2[j] += lr * d_out[j];
+					for (int k = 0; k < hn; k++) w2[k*outn+j] += lr * d_out[j] * h[k];
+				}
+				for (int j = 0; j < hn; j++) {
+					double err = 0;
+					for (int k = 0; k < outn; k++) err += d_out[k] * w2[j*outn+k];
+					double d_h = err * ai::sigmoid_derivative(h[j]);
+					b1[j] += lr * d_h;
+					for (int k = 0; k < inn; k++) w1[k*hn+j] += lr * d_h * px[k];
+				}
+				delete[] h;
+				delete[] out;
+				delete[] d_out;
+			}
+		}
+	}
+
+	int guess(double* p, double* w1, double* w2, double* b1, double* b2, int inn, int hn, int outn) {
+		double* h = new double[hn];
+		for (int j = 0; j < hn; j++) {
+			double sum = b1[j];
+			for (int k = 0; k < inn; k++) sum += p[k] * w1[k*hn+j];
+			h[j] = ai::sigmoid(sum);
+		}
+		double* out = new double[outn];
+		for (int j = 0; j < outn; j++) {
+			double sum = b2[j];
+			for (int k = 0; k < hn; k++) sum += h[k] * w2[k*outn+j];
+			out[j] = ai::sigmoid(sum);
+		}
+		int result = 0;
+		for (int i = 1; i < outn; i++) if (out[i] > out[result]) result = i;
+		delete[] h;
+		delete[] out;
+		return result;
+	}
 }
 
 int main(){
@@ -288,6 +360,34 @@ int main(){
 			if (strcmp(inp, "gncb://gncb.run")==0) {
 				printf("%s",findstr("browser:gncbrun").c_str());
 			}
+		} else if (strcmp(inp, "ai") == 0) {
+			int inn = 25, hn = 8, outn = 4;
+			double inputs_flat[] = {
+				0,0,1,0,0, 0,1,0,1,0, 1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1, // A
+				1,1,1,1,1, 1,0,0,1,0, 1,1,1,1,1, 1,0,0,1,0, 1,1,1,1,1, // B
+				0,1,1,1,1, 1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 0,1,1,1,1, // C
+				1,1,1,1,0, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,0, // D
+			};
+			double expected[] = {
+				1,0,0,0,
+				0,1,0,0,
+				0,0,1,0,
+				0,0,0,1,
+			};
+			double* w1 = new double[inn * hn];
+			double* w2 = new double[hn * outn];
+			double* b1 = new double[hn]();
+			double* b2 = new double[outn]();
+			srand(42);
+			for (int i=0; i<inn*hn;i++) w1[i] = ((double)rand()/RAND_MAX)*2-1;
+			for (int i=0; i<hn*outn;i++) w2[i] = ((double)rand()/RAND_MAX)*2-1;
+			ai::train(inputs_flat,4,expected,w1,w2,b1,b2,inn,hn,outn,10000,0.1);
+			char letters[4] = {'A', 'B', 'C', 'D'};
+			for (int i = 0; i < 4; i++) {
+				int r = ai::guess(inputs_flat + i * inn,w1,w2,b1,b2,inn,hn,outn);
+				printf("%c => %c\n", letters[i], letters[r]);
+			}
+			delete[] w1; delete[] w2; delete[] b1; delete[] b2;
 		}
 	}
 }
