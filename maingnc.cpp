@@ -38,6 +38,7 @@ It's important to remember this!
 
 Popular websites:
 gncb://gncb.run
+gncb://max.run
 gncb>)"},
 	{"browser:gncbrun", R"(
 	GNCB INTRODUCTION SITE
@@ -45,6 +46,13 @@ gncb>)"},
 	This site was created to provide you 
 	with a virtual browser that is not HTML!
 )"},
+	{"browser:maxrun", R"(
+MAX.RUN
+My cat's website
+
+meow
+)"},
+	{"meow", "meow"},
 };
 std::map<std::string,std::string> de = {
 	{"about", "Gimpnotizbuch-Konsole, 2026."},
@@ -74,6 +82,7 @@ Das ist wichtig zu merken!
 
 Beliebte Websites:
 gncb://gncb.run
+gncb://max.run
 gncb>)"},
 	{"browser:gncbrun", R"(
 	GNKB EINFÜHRUNGSSEITE
@@ -82,6 +91,13 @@ gncb>)"},
 	um Ihnen einen virtuellen Browser bereitzustellen,
 	der kein HTML ist!
 )"},
+	{"browser:maxrun", R"(
+MAX.RUN
+Die Webseite meiner Katze
+
+Miau
+)"},
+	{"meow", "Miau"},
 };
 std::map<std::string,std::string> ru = {
 	{"about", "Консоль ГимпБлокнота, 2026."},
@@ -110,6 +126,7 @@ ai | тест ии)"},
 
 Популярные сайты:
 gncb://gncb.run
+gncb://max.run
 gncb>)"},
 	{"browser:gncbrun", R"(
 	САЙТ ОЗНАКОМЛЕНИЯ БКГБ
@@ -118,6 +135,13 @@ gncb>)"},
 	вам виртуальный браузер, который не является
 	HTML!
 )"},
+	{"browser:maxrun", R"(
+MAX.RUN
+Сайт моего кота
+
+мяу
+)"},
+	{"meow", "мяу"},
 };
 
 int lang = 0;
@@ -287,6 +311,7 @@ int main(){
 	double calc1, calc2;
 	char calcop[8];
 	char calcopm;
+	char str[1024];
 	while (true){
 		printf("%s>", name.c_str());
 		fgets(inp, sizeof(inp), stdin);
@@ -359,6 +384,9 @@ int main(){
 			inp[strcspn(inp, "\n")] = '\0';
 			if (strcmp(inp, "gncb://gncb.run")==0) {
 				printf("%s",findstr("browser:gncbrun").c_str());
+			} else if (strcmp(inp, "gncb://max.run") == 0) {
+				printf("%s",findstr("browser:maxrun").c_str());
+				printf("%s\n", log_message(findstr("meow").c_str(), "MEOW"));
 			}
 		} else if (strcmp(inp, "ai") == 0) {
 			int inn = 25, hn = 8, outn = 4;
@@ -381,13 +409,21 @@ int main(){
 			srand(42);
 			for (int i=0; i<inn*hn;i++) w1[i] = ((double)rand()/RAND_MAX)*2-1;
 			for (int i=0; i<hn*outn;i++) w2[i] = ((double)rand()/RAND_MAX)*2-1;
+			if (debug) printf("ai::train\n");
 			ai::train(inputs_flat,4,expected,w1,w2,b1,b2,inn,hn,outn,10000,0.1);
+			printf("%s", log_message("ai trained", "AI"));
 			char letters[4] = {'A', 'B', 'C', 'D'};
 			for (int i = 0; i < 4; i++) {
+				if (debug) printf("ai::guess\n");
 				int r = ai::guess(inputs_flat + i * inn,w1,w2,b1,b2,inn,hn,outn);
+				printf("%s", log_message("ai guessed:", "AI"));
+				if (debug) printf("num%d ", r);
 				printf("%c => %c\n", letters[i], letters[r]);
 			}
+			printf("%s", log_message("ai tested", "AI"));
 			delete[] w1; delete[] w2; delete[] b1; delete[] b2;
+		} else if (sscanf(inp, "print %s", str) == 1) {
+			printf("%s\n", str);
 		}
 	}
 }
