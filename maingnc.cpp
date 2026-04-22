@@ -24,7 +24,8 @@ color [num] | change console color
 cls | clear screen
 calc | calculator
 browser | browser
-ai | ai test)"},
+ai | ai test
+print [text] | output text)"},
 	{"on", "on"},
 	{"info", "Information"},
 	{"warn", "Warning"},
@@ -68,7 +69,8 @@ color [num] | Konsolenfarbe ändern
 cls | Bildschirm löschen
 calc | Kalkulator
 browser | Browser
-ai | KI-Test)"},
+ai | KI-Test
+print [Text] | Ausgabetext)"},
 	{"on", "auf"},
 	{"info", "Info"},
 	{"warn", "Warnung"},
@@ -113,7 +115,8 @@ color [num] | сменить цвет консоли
 cls | очистить экран
 calc | калькулятор
 browser | браузер
-ai | тест ии)"},
+ai | тест ии
+print [text] | вывести текст)"},
 	{"on", "на"},
 	{"info", "Информация"},
 	{"warn", "Предупреждение"},
