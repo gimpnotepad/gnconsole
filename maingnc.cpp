@@ -363,7 +363,7 @@ int main(){
 				else if (calcopm == '/') {
 					if (calc2 != 0) {
 						printf("%.6lf\n", calc1/calc2);
-					} else {
+					} else { 
 						printf("NaN\n");
 					}
 				} else if (calcopm == '^') printf("%.6lf\n", pow(calc1,calc2));
@@ -425,7 +425,7 @@ int main(){
 			}
 			printf("%s", log_message("ai tested", "AI"));
 			delete[] w1; delete[] w2; delete[] b1; delete[] b2;
-		} else if (sscanf(inp, "print %s", str) == 1) {
+		} else if (sscanf(inp, "print %1023[^\n]", str) == 1) {
 			printf("%s\n", str);
 		}
 	}
