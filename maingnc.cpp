@@ -25,7 +25,8 @@ cls | clear screen
 calc | calculator
 browser | browser
 ai | ai test
-print [text] | output text)"},
+print [text] | output text
+gncsa [numbers] | similar to print [text], but with numbers and support for GNCSA standard)"},
 	{"on", "on"},
 	{"info", "Information"},
 	{"warn", "Warning"},
@@ -65,12 +66,13 @@ help | Hilfe anzeigen
 about | über Programm
 systeminfo | Systeminformationen
 random [min] [max] | Zufallszahl
-color [num] | Konsolenfarbe ändern
+color [Zahl] | Konsolenfarbe ändern
 cls | Bildschirm löschen
 calc | Kalkulator
 browser | Browser
 ai | KI-Test
-print [Text] | Ausgabetext)"},
+print [Text] | Ausgabetext
+gncsa [Zahlen] | Ähnlich wie print [Text], jedoch mit Zahlen und Unterstützung für den DSaGNK-Standard)"},
 	{"on", "auf"},
 	{"info", "Info"},
 	{"warn", "Warnung"},
@@ -116,7 +118,8 @@ cls | очистить экран
 calc | калькулятор
 browser | браузер
 ai | тест ии
-print [text] | вывести текст)"},
+print [text] | вывести текст
+gncsa [numbers] | аналогично, что и print [text], но с числами и поддержкой стандарта САКГБ)"},
 	{"on", "на"},
 	{"info", "Информация"},
 	{"warn", "Предупреждение"},
@@ -151,6 +154,20 @@ int lang = 0;
 bool debug = 0;
 std::string name = "gnc";
 int color = 7;
+
+const char en_l[] = {
+	'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
+};
+
+const char* ru_l[] = {
+	"А","Б","В","Г","Д","Е","Ё","Ж","З","И","Й","К","Л","М","Н","О","П","Р","С","Т","У","Ф","Х","Ц","Ч","Ш","Щ","Ъ","Ы","Ь","Э","Ю","Я",
+	"а","б","в","г","д","е","ё","ж","з","и","й","к","л","м","н","о","п","р","с","т","у","ф","х","ц","ч","ш","щ","ъ","ы","ь","э","ю","я",
+};
+
+const char* de_l[] = {
+	"Ä","Ö","Ü","ß",
+	"ä","ö","ü","ß",
+};
 
 std::string findstr(std::string str){
 	if (lang == 0) {
@@ -270,12 +287,14 @@ int main(){
 	} else {
 		std::ifstream setfi(setf);
 		std::string l;
+		char test1[] = "=>";
+		char test2[] = " ";
 		if (setfi) {
 			while (std::getline(setfi,l)){
 				if (debug) {
-				printf("%s\n", l.c_str());
+				printf("%s\n", log_message(l.c_str(), "DEBUG"));
 					for (char c : l){
-						printf("%d ", (int)(unsigned char)c);
+						printf("%s", log_message(std::to_string((int)(unsigned char)c).c_str(), "DEBUG:ARGUMENT"));
 					}
 					printf("\n");
 				}
@@ -283,11 +302,13 @@ int main(){
 				if (!l.empty() && l.back() == '\r') l.pop_back();
 				if (l.empty()) continue;
 				auto p = l.find('=');
-				if (debug) printf("%d\n", p);
+				std::string d_p = std::to_string(p);
+				if (debug) printf("%s\n", log_message(d_p.c_str(), "DEBUG:POS_OF_EQUAL"));
 				if (p != std::string::npos){
 					std::string k = l.substr(0,p);
 					std::string v = l.substr(p+1);
-					if (debug) printf("%s %s\n", k.c_str(), v.c_str());
+					if (debug) printf("%s", log_message(k.c_str(), "DEBUG"));
+					if (debug) printf("%s", log_message(v.c_str(), "DEBUG"));
 					if (k == "lang") {
 						if (v == "de") lang = 1;
 						else if (v == "ru") lang = 2;
@@ -427,6 +448,19 @@ int main(){
 			delete[] w1; delete[] w2; delete[] b1; delete[] b2;
 		} else if (sscanf(inp, "print %1023[^\n]", str) == 1) {
 			printf("%s\n", str);
+		} else if (sscanf(inp, "gncsa %1023[^\n]", str) == 1) {
+			int num;
+			char* ptr = str;
+			while (sscanf(ptr, "%d", &num) == 1) {
+				if (num == 0) printf(" ");
+				else if (num >= 1 && num <= 26) printf("%c", 'A'+num-1);
+				else if (num >= 27 && num <= 52) printf("%c", en_l[num-27]);
+				else if (num >= 53 && num <= 118) printf("%s", ru_l[num-53]);
+				else if (num >= 119 && num <= 126) printf("%s", de_l[num-119]);
+				while (*ptr && *ptr != ' ') ptr++;
+				while (*ptr == ' ') ptr++;
+			}
+			printf("\n");
 		}
 	}
 }
