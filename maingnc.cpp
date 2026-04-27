@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <cmath>
+#include <chrono>
+#include <thread>
 #include <map>
 #include <string>
 #include <filesystem>
@@ -26,7 +28,11 @@ calc | calculator
 browser | browser
 ai | ai test
 print [text] | output text
-gncsa [numbers] | similar to print [text], but with numbers and support for GNCSA standard)"},
+gncsa [numbers] | similar to print [text], but with numbers and support for GNCSA standard
+set [x] [num] | set x to value num
+get [x] | get the value of variable x
+savevar | save variables to a file
+loadvar | load variables from a file)"},
 	{"on", "on"},
 	{"info", "Information"},
 	{"warn", "Warning"},
@@ -55,6 +61,7 @@ My cat's website
 meow
 )"},
 	{"meow", "meow"},
+	{"notfound", "This program is not on GNConsole. (or the arguments are empty/incorrect/incomplete)"}
 };
 std::map<std::string,std::string> de = {
 	{"about", "Gimpnotizbuch-Konsole, 2026."},
@@ -72,7 +79,11 @@ calc | Kalkulator
 browser | Browser
 ai | KI-Test
 print [Text] | Ausgabetext
-gncsa [Zahlen] | Ähnlich wie print [Text], jedoch mit Zahlen und Unterstützung für den DSaGNK-Standard)"},
+gncsa [Zahlen] | Ähnlich wie print [Text], jedoch mit Zahlen und Unterstützung für den DSaGNK-Standard
+set [x] [num] | Setze x den Wert num
+get [x] | Hole den Wert der Variablen x
+savevar | Speichere Variablen in einer Datei
+loadvar | Lade Variablen aus einer Datei)"},
 	{"on", "auf"},
 	{"info", "Info"},
 	{"warn", "Warnung"},
@@ -102,6 +113,7 @@ Die Webseite meiner Katze
 Miau
 )"},
 	{"meow", "Miau"},
+	{"notfound", "Dieses Programm ist nicht in der Gimpnotizbuch-Konsole verfügbar. (oder die Argumente sind leer/falsch/unvollständig)"}
 };
 std::map<std::string,std::string> ru = {
 	{"about", "Консоль ГимпБлокнота, 2026."},
@@ -119,7 +131,11 @@ calc | калькулятор
 browser | браузер
 ai | тест ии
 print [text] | вывести текст
-gncsa [numbers] | аналогично, что и print [text], но с числами и поддержкой стандарта САКГБ)"},
+gncsa [numbers] | аналогично, что и print [text], но с числами и поддержкой стандарта САКГБ
+set [x] [num] | поставить x со значением num
+get [x] | получить значение переменной x
+savevar | сохранить переменные в файл
+loadvar | загрузить переменные из файла)"},
 	{"on", "на"},
 	{"info", "Информация"},
 	{"warn", "Предупреждение"},
@@ -148,12 +164,120 @@ MAX.RUN
 мяу
 )"},
 	{"meow", "мяу"},
+	{"notfound", "Эта программа отсутствует в консоли ГимпБлокнота. (или аргументы пустые/неправильные/неполные)"}
+};
+std::map<std::string,std::string> gn = {
+	{"about", "Gimpbłocnot-Klonse, 2026."},
+	{"lang", "Crećy lengse:"},
+	{"help", R"(==== HELP ====
+lang | selsec lengse
+exit | klos progem
+help | widenswac helaps
+about | ubund progem
+systeminfo | systubund
+random [min] [max] | raćen nomle
+color [num] | crećy cólt klonse
+cls | ske klonse
+calc | kelkretor
+browser | bruzwer
+ai | lingin-sys tresna
+print [text] | owe żdikt
+gncsa [numbers] | pocoże print [text], no sle nomle ini typro dla GBKSL sendra
+set [x] [num] | postaviżd x zo znacene num
+get [x] | polutiżd znacene x
+savevar | sokrani peremenie w fil
+loadvar | zargine peremenie iz fil)"},
+	{"on", "re"},
+	{"info", "Nsew"},
+	{"warn", "Loedar"},
+	{"err", "Krans"},
+	{"log:loaded", "Progem lons'd!"},
+	{"log:nulllang", "Null'n lengse"},
+	{"browser", R"(GimpBłocnot-Klonse Bruzwer
+Wsyal wetis toz natzinaca sle gncb pleix, xorne https pleix!
+
+To wazcne pomnite!
+
+Luzvsie wetis:
+gncb://gncb.run
+gncb://max.run
+gncb>)"},
+	{"browser:gncbrun", R"(
+	GBKB POMOZV WETIN
+
+	To wetin by sozdwa dla te 
+	sle vertne bruzwer ye xorne HTML!
+)"},
+	{"browser:maxrun", R"(
+MAX.RUN
+Mer kats wetin
+
+muar
+)"},
+	{"meow", "muar"},
+	{"notfound", "To progem xorne re GBKlonse. (ili argef pust/xornepravin/xornepoln)"}
+};
+
+std::map<std::string,std::string> pl = {
+{"about", "Konsola GimpNotatnik, 2026."},
+{"lang", "Wybierz język:"},
+{"help", R"(==== HELP ====
+lang | zmień język
+exit | zamknij program
+help | pokaż tę listę
+about | o tym programie
+systeminfo | informacje o systemie
+random [min] [max] | liczba losowa
+color [num] | zmień kolor konsoli
+cls | wyczyść ekran
+calc | kalkulator
+browser | przeglądarka
+ai | test AI
+print [text] | wyświetl tekst
+gncsa [numbers] | to samo co print [text], ale z liczbami i obsługą standardu SAKGN
+set [x] [liczba] | ustaw x na wartość num
+get [x] | pobierz wartość zmiennej x
+savevar | zapisz zmienne do pliku
+loadvar | załaduj zmienne z pliku)"},
+{"on", "na"},
+{"info", "Informacje"},
+{"warn", "Ostrzeżenie"},
+{"err", "Błąd"},
+{"log:loaded", "Program załadowany!"},
+{"log:nulllang", "Brak takiego języka"},
+{"browser", R"(Konsola GimpNotatnik przeglądarka
+Wszystkie strony tutaj zaczynają się od prefiksu gncb, a nie prefiksu https,
+warto o tym pamiętać!
+
+Popularne strony:
+gncb://gncb.run
+gncb://max.run
+gncb>)"},
+{"browser:gncbrun", R"(
+STRONA WPROWADZAJĄCA KGNP
+
+Ta strona została stworzona, aby zapewnić
+ci wirtualną przeglądarkę, która nie jest
+HTML!
+)"},
+{"browser:maxrun", R"(
+MAX.RUN
+Strona mojego kota
+
+miau
+)"},
+{"meow", "miau"},
+{"notfound", "Ten program nie jest obecny w konsoli GimpNotatnik. (lub argumenty są pusty/niepoprawny/niekompletny)"}
 };
 
 int lang = 0;
 bool debug = 0;
 std::string name = "gnc";
 int color = 7;
+
+const char* sys_l[] = {
+	"", ".", ",", "-", "+", "*", "/", "(", ")", "&", "^", "%", "$", "#", "\"", "'", "\\"
+};
 
 const char en_l[] = {
 	'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
@@ -169,6 +293,13 @@ const char* de_l[] = {
 	"ä","ö","ü","ß",
 };
 
+void errorhappened(const char* err) {
+	set_console_color(64);
+	system("cls");
+	printf("%s", err);
+	while (true) {}
+}
+
 std::string findstr(std::string str){
 	if (lang == 0) {
 		auto i = en.find(str);
@@ -183,6 +314,16 @@ std::string findstr(std::string str){
 	} else if (lang == 2) {
 		auto i = ru.find(str);
 		if (i != ru.end()){
+			return i->second;		
+		}
+	} else if (lang == 3) {
+		auto i = gn.find(str);
+		if (i != gn.end()){
+			return i->second;		
+		}
+	} else if (lang == 4) {
+		auto i = pl.find(str);
+		if (i != pl.end()){
 			return i->second;		
 		}
 	}
@@ -208,6 +349,37 @@ void changef(std::filesystem::path setf, std::string a, std::string b){
 		setfo << l << "\n";
 	}
 	setfo.close();
+}
+
+void save_variables(const std::map<std::string, double>& vars, const char* filename) {
+    FILE* f = fopen(filename, "w");
+    if (!f) {
+        if (debug) printf("%s", log_message("file:cannotread", findstr("err").c_str()));
+        return;
+    }
+    for (const auto& [name, val] : vars) {
+        fprintf(f, "%s=%g\n", name.c_str(), val);
+    }
+    fclose(f);
+    if (debug) printf("Saved %s\n", filename);
+}
+
+void load_variables(std::map<std::string, double>& vars, const char* filename) {
+    FILE* f = fopen(filename, "r");
+    if (!f) {
+        if (debug) printf("%s", log_message("file:null\n", findstr("warn").c_str()));
+        return;
+    }
+    char line[128];
+    char key[32];
+    double val;
+    while (fgets(line, sizeof(line), f)) {
+        if (sscanf(line, " %31[a-zA-Z0-9] = %lf", key, &val) == 2) {
+            vars[key] = val;
+        }
+    }
+    fclose(f);
+    if (debug) printf("Loaded from %s\n", filename);
 }
 
 namespace ai {
@@ -280,6 +452,7 @@ namespace ai {
 int main(){
 	SetConsoleOutputCP(CP_UTF8);
 	SetConsoleCP(CP_UTF8);
+	std::map<std::string, double> vars;
 	std::filesystem::path setf = "settings.gnc";
 	if (!std::filesystem::exists(setf)){
 		std::ofstream setfo(setf);
@@ -287,8 +460,6 @@ int main(){
 	} else {
 		std::ifstream setfi(setf);
 		std::string l;
-		char test1[] = "=>";
-		char test2[] = " ";
 		if (setfi) {
 			while (std::getline(setfi,l)){
 				if (debug) {
@@ -312,22 +483,28 @@ int main(){
 					if (k == "lang") {
 						if (v == "de") lang = 1;
 						else if (v == "ru") lang = 2;
+						else if (v == "gn") lang = 3;
+						else if (v == "pl") lang = 4;
 						else if (v == "en") lang = 0;
 					} else if (k == "debug"){
 						if (v == "1") debug = true;
 						else if (v == "0") debug = false;
+						else errorhappened("ERROR:DEBUG_OR_NOT");
 					} else if (k == "name") {
 						if (!v.empty()) name = v;
 						else name = "gnc";
 					} else if (k == "color") {
 						if (sscanf(v.c_str(), "%d", &color) == 1) {
 							set_console_color(color);
+						} else {
+							errorhappened("ERROR:INCORRECT_COLOR");
 						}
 					}
 				}
 			}
 		}
 	}
+	load_variables(vars, "vars.gnc");
 	if (debug) printf("\n%s\n", log_message(findstr("log:loaded").c_str(), findstr("info").c_str()));
 	printf("%s\n", findstr("about").c_str());
 	char inp[1024];
@@ -336,6 +513,8 @@ int main(){
 	char calcop[8];
 	char calcopm;
 	char str[1024];
+	double numv;
+	char varn[32];
 	while (true){
 		printf("%s>", name.c_str());
 		fgets(inp, sizeof(inp), stdin);
@@ -353,6 +532,12 @@ int main(){
 			} else if (strcmp(inp, "ru") == 0) {
 				changef(setf,"lang=","lang=ru");
 				lang=2;
+			} else if (strcmp(inp, "gn") == 0) {
+				changef(setf,"lang=","lang=gn");
+				lang=3;
+			} else if (strcmp(inp, "pl") == 0) {
+				changef(setf,"lang=","lang=pl");
+				lang=4;
 			} else {
 				if (debug) printf("%s", log_message(findstr("log:nulllang").c_str(),findstr("warn").c_str()));
 			}
@@ -395,11 +580,21 @@ int main(){
 					} else {
 						printf("%.6lf\n", pow(calc1, (1.0/calc2)));
 					}
+				} else if (strcmp(calcop, "log") == 0) {
+					if (calc1 <= 0 || calc2 <= 0) {
+						printf("0.000000\n");
+					} else {
+						printf("%.6lf\n", log(calc1)/log(calc2));
+					}
 				}
 			} else if (sscanf(inp, "%s %lf", calcop, &calc1) == 2) {
 				if (strcmp(calcop, "ln") == 0) {
 					if (calc1 <= 0) printf("0.000000\n");
 					printf("%.6lf\n", log(calc1));
+				} else if (strcmp(calcop, "sin") == 0) {
+					printf("%.6lf\n", sin(calc1));
+				} else if (strcmp(calcop, "cos") == 0) {
+					printf("%.6lf\n", cos(calc1));
 				} 
 			}
 		} else if (strcmp(inp, "browser") == 0) {
@@ -411,6 +606,8 @@ int main(){
 			} else if (strcmp(inp, "gncb://max.run") == 0) {
 				printf("%s",findstr("browser:maxrun").c_str());
 				printf("%s\n", log_message(findstr("meow").c_str(), "MEOW"));
+				std::this_thread::sleep_for(std::chrono::seconds(5));
+				errorhappened("meow meow meow meow meow \nmeow meow meow meow meow \nmeow meow meow meow meow \nmeow meow meow meow meow \nmeow meow meow meow meow");
 			}
 		} else if (strcmp(inp, "ai") == 0) {
 			int inn = 25, hn = 8, outn = 4;
@@ -453,6 +650,7 @@ int main(){
 			char* ptr = str;
 			while (sscanf(ptr, "%d", &num) == 1) {
 				if (num == 0) printf(" ");
+				else if (num < 0 && num >= -16) printf("%s", sys_l[-num]);
 				else if (num >= 1 && num <= 26) printf("%c", 'A'+num-1);
 				else if (num >= 27 && num <= 52) printf("%c", en_l[num-27]);
 				else if (num >= 53 && num <= 118) printf("%s", ru_l[num-53]);
@@ -461,6 +659,17 @@ int main(){
 				while (*ptr == ' ') ptr++;
 			}
 			printf("\n");
+		} else if (sscanf(inp, "set %31[a-zA-Z0-9] %lf", varn, &numv) == 2) {
+			vars[varn] = numv;
+		} else if (sscanf(inp, "get %31[a-zA-Z0-9]", varn) == 1) {
+			if (vars.count(varn)) printf("%lf\n", vars[varn]);
+			else printf("undefined\n");
+		} else if (strcmp(inp, "savevar") == 0) {
+			save_variables(vars, "vars.gnc");
+		} else if (strcmp(inp, "loadvar") == 0) {
+			load_variables(vars, "vars.gnc");
+		} else {
+			printf("%s", log_message(findstr("notfound").c_str(), findstr("err").c_str()));
 		}
 	}
 }
