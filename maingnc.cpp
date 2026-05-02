@@ -292,12 +292,17 @@ int lang = 0;
 bool debug = 0;
 std::string name = "gnc";
 int color = 7;
-std::vector<int> p = {0};
 
+std::vector<int> p = {0};
+std::map<std::string, int> f = {};
 bool gncsab = false;
 bool logic = false;
 int depth = 0;
 int skip_depth = 0;
+int pc_r;
+int ctpc;
+int func;
+bool ferr = false;
 
 std::map<std::string, int> varsd_gnclk;
 std::map<std::string, std::string> varst_gnclk;
@@ -395,23 +400,24 @@ void gncsa(char* str) {
 	printf("\n");
 }
 
-void gnclk(const char* inp) {
+void gnclk(const char* inp, int& pc) {
 	char str[1024];
 	char name[32];
 	char n1[32];
 	char n2[32];
+	char n3[32];
 	int vald;
 	char valt[1024];
-	char op[8];
-	if (skip_depth == 0) {
+	char op;
+	if (skip_depth == 0 && func == 0) {
 		if (sscanf(inp, "print(\"%[^\"]\");", str) == 1) {
 				printf("%s\n", str);
 		} else if (sscanf(inp, "int %31[A-Za-z] = %d;", name, &vald) == 2) {
 			if (varsd_gnclk.count(name)) printf("DefineError: this variable is defined\n");
 			else varsd_gnclk[name] = vald;
-		} else if (sscanf(inp, "txt %31[A-Za-z] = \"%[^\"]\";", name, valt) == 2) {
+		} else if (sscanf(inp, "txt %31[A-Za-z] = \"%[^\"]\";", name, valt) >= 2) {
 			if (varst_gnclk.count(name)) printf("DefineError: this variable is defined\n");
-			else varst_gnclk[name] = valt;
+			else varst_gnclk[name] = (strlen(valt) > 0) ? valt : "";
 		} else if (sscanf(inp, "printd(%31[A-Za-z]);", name) == 1) {
 			if (varsd_gnclk.count(name)) printf("%d\n", varsd_gnclk[name]);
 		} else if (sscanf(inp, "printt(%31[A-Za-z]);", name) == 1) {
@@ -432,18 +438,89 @@ void gnclk(const char* inp) {
 			if (varst_gnclk.count(n1) && varst_gnclk.count(n2)) logic = (varst_gnclk[n1] == varst_gnclk[n2]);
 		} else if (strcmp(inp, "printl();") == 0) {
 			printf("%d\n", logic);
-		} else if (strncmp(inp, "ifl", 3) == 0) {
-			p.push_back(0); 
+		} else if (strncmp(inp, "ifnl", 3) == 0) {
+			p.push_back(logic ? 0 : 1); 
 			if (!logic) skip_depth = 1;
-		} else if (strncmp(inp, "ifnl", 3) == 0) { 
-			p.push_back(1);
+		} else if (strncmp(inp, "ifl", 3) == 0) { 
+			p.push_back(!logic ? 0 : 1);
 			if (logic) skip_depth = 1;
 			depth++;
+		} else if(sscanf(inp, "func %31[A-Za-z]", name) == 1) {
+			if (func == 1) {
+				printf("FuncError: Function in Function\n");
+				ferr = true;
+				return;
+			}
+			if (pc != ctpc) {
+			    skip_depth = 1;
+			    func = 1;
+			} else {
+				skip_depth = 0;
+			    func = 0;
+			}
+			if (!f.count(name)) f[name] = pc;
+		} else if (sscanf(inp, "callfunc(%31[A-Za-z]);", name) == 1) {
+			if (f.count(name)) {
+				pc_r = pc;
+				ctpc = f[name];
+		    	pc = f[name];
+				skip_depth = 0;
+				func = 0;
+			}
+		} else if (strncmp(inp, "endfunc", 7) == 0 && skip_depth == 0) {
+			if (pc_r != -1) {
+				pc = pc_r;
+				pc_r = -1;
+				ctpc = -1;
+				depth = 0;
+			}
+			func = 0;
+			skip_depth = 0;
+		} else if (sscanf(inp, "inputt(%31[A-Za-z]);", name) == 1) {
+			if (varst_gnclk.count(name)) {
+				char inw[1024];
+        		while (fgets(inw, sizeof(inw), stdin)) {
+            		inw[strcspn(inw, "\n")] = 0;
+            		if (strlen(inw) > 0) {
+       		         	varst_gnclk[name] = inw;
+        	        	break;
+        	    	}
+        		}
+			}
+		} else if (sscanf(inp, "inputd(%31[A-Za-z]);", name) == 1) {
+			if (varsd_gnclk.count(name)) {
+				char in[1024];
+				if (fgets(in, sizeof(in), stdin)) {
+					int t_v;
+					if (sscanf(in, "%d", &t_v) == 1) {
+						varsd_gnclk[name] = t_v;
+					}
+				}
+			}
+		} else if(sscanf(inp, "calc(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
+			if (varsd_gnclk.count(n1) && varsd_gnclk.count(n2) && varsd_gnclk.count(n3)) {
+				if (op == '+') varsd_gnclk[n3] = varsd_gnclk[n1] + varsd_gnclk[n2];
+				else if (op == '-') varsd_gnclk[n3] = varsd_gnclk[n1] - varsd_gnclk[n2];
+				else if (op == '*') varsd_gnclk[n3] = varsd_gnclk[n1] * varsd_gnclk[n2];
+				else if (op == '/' && varsd_gnclk[n2] > 0) varsd_gnclk[n3] = varsd_gnclk[n1] / varsd_gnclk[n2];
+				else if (op == '^') varsd_gnclk[n3] = std::pow(varsd_gnclk[n1],varsd_gnclk[n2]);
+				else if (op == '#' && varsd_gnclk[n1]>=0 && varsd_gnclk[n2]%2!=0) varsd_gnclk[n3] = std::pow(varsd_gnclk[n1], 1/varsd_gnclk[n2]);
+				else if (op == '&' && varsd_gnclk[n1]>0 && varsd_gnclk[n2]>0) varsd_gnclk[n3] = log(varsd_gnclk[n1])/log(varsd_gnclk[n2]); 
+			}
 		}
 	}
-	if (strncmp(inp, "stp", 3) == 0) {
-		if (depth>0) depth--;
-		skip_depth = p[depth];
+	if (strncmp(inp, "stp", 3) == 0 && func == 0) {
+		if (depth>0) { 
+			depth--;
+			if (!p.empty()) {
+				p.pop_back();
+				if (depth<p.size()) skip_depth = p[depth];
+				else skip_depth = 0;
+			} else skip_depth = 0;
+		}
+	} else if (strncmp(inp, "endfunc", 7) == 0 && skip_depth == 1 && func == 1) {
+		func = 0;
+		skip_depth = 0;
 	}
 }
 
@@ -829,12 +906,15 @@ int main(){
 			load_file(filename);
 			int pc = 0;
 			while (pc < total_lines) {
-    			gnclk(program[pc]);
+				if (!ferr) {
+    				gnclk(program[pc], pc);
+    			}
     			pc++;
     		}
     		if (depth != 0) {
     			printf("Stopped on depth No. %d\n", depth);
 			}
+			ferr = false;
 		} else {
 			printf("%s", log_message(findstr("notfound").c_str(), findstr("err").c_str()));
 		}
