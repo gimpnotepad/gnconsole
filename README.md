@@ -10,3 +10,51 @@ and font Lucida Console or Consolas for Windows 7, not Raster fonts!
 <img width="386" height="474" alt="Settings for gnconsole (for CLI-programms)" src="https://github.com/user-attachments/assets/51a3a480-aa24-4ad5-b620-abf87460aadb" />
 
 i mean this by the way
+
+# Examples for gnclk
+Calculator:
+```gnclk
+func calcu
+cmpt(f,p);
+ifl
+calc(cf + cs) -> cf;
+printd(cf);
+stp
+ifnl
+cmpt(f,m);
+ifl
+calc(cf - cs) -> cf;
+printd(cf);
+stp
+ifnl
+cmpt(f,mu);
+ifl
+calc(cf * cs) -> cf;
+printd(cf);
+stp
+ifnl
+cmpt(f,d);
+ifl
+calc(cf / cs) -> cf;
+printd(cf);
+stp
+ifnl
+print("error");
+stp
+stp
+stp
+endfunc
+print("calc:");
+txt p = "+";
+txt m = "-";
+txt mu = "*";
+txt d = "/";
+int cf = 0;
+txt f = "/";
+int cs = 0;
+inputd(cf);
+inputd(cs);
+print("func:");
+inputt(f);
+callfunc(calcu);
+```
