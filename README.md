@@ -38,9 +38,6 @@ ifl
 calc(cf / cs) -> cf;
 printd(cf);
 stp
-ifnl
-print("error");
-stp
 stp
 stp
 endfunc
