@@ -14,6 +14,12 @@ i mean this by the way
 # Examples for gnclk
 Calculator:
 ```gnclk
+txt p = "+";
+txt m = "-";
+txt mu = "*";
+txt d = "/";
+txt n = "n";
+txt f = "n";
 func calcu
 cmpt(f,p);
 ifl
@@ -38,16 +44,19 @@ ifl
 calc(cf / cs) -> cf;
 printd(cf);
 stp
+ifnl
+cmpt(f,n);
+ifl
+stp
+ifnl
+print("error");
+stp
+stp
 stp
 stp
 endfunc
 print("calc:");
-txt p = "+";
-txt m = "-";
-txt mu = "*";
-txt d = "/";
 int cf = 0;
-txt f = "/";
 int cs = 0;
 inputd(cf);
 inputd(cs);
