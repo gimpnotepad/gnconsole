@@ -438,10 +438,10 @@ void gnclk(const char* inp, int& pc) {
 			if (varst_gnclk.count(n1) && varst_gnclk.count(n2)) logic = (varst_gnclk[n1] == varst_gnclk[n2]);
 		} else if (strcmp(inp, "printl();") == 0) {
 			printf("%d\n", logic);
-		} else if (strncmp(inp, "ifnl", 3) == 0) {
+		} else if (strncmp(inp, "ifl", 3) == 0) {
 			p.push_back(logic ? 0 : 1); 
 			if (!logic) skip_depth = 1;
-		} else if (strncmp(inp, "ifl", 3) == 0) { 
+		} else if (strncmp(inp, "ifnl", 3) == 0) { 
 			p.push_back(!logic ? 0 : 1);
 			if (logic) skip_depth = 1;
 			depth++;
@@ -517,7 +517,7 @@ void gnclk(const char* inp, int& pc) {
 				if (depth<p.size()) skip_depth = p[depth];
 				else skip_depth = 0;
 			} else skip_depth = 0;
-		}
+		} else skip_depth = 0;
 	} else if (strncmp(inp, "endfunc", 7) == 0 && skip_depth == 1 && func == 1) {
 		func = 0;
 		skip_depth = 0;
