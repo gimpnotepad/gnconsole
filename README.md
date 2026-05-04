@@ -12,7 +12,7 @@ and font Lucida Console or Consolas for Windows 7, not Raster fonts!
 i mean this by the way
 
 # Examples for gnclk
-### Calculator:
+## Calculator:
 ```gnclk
 txt p = "+";
 txt m = "-";
@@ -65,7 +65,7 @@ inputt(f);
 callfunc(calcu);
 ```
 
-### Counter from 0 to 10
+## Counter from 0 to 10:
 ```
 int x = 0;
 int add = 1;
