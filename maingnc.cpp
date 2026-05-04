@@ -303,9 +303,12 @@ int pc_r;
 int ctpc;
 int func;
 bool ferr = false;
+char* program[65536];
+int total_lines = 0;
 
 std::map<std::string, int> varsd_gnclk;
 std::map<std::string, std::string> varst_gnclk;
+std::map<std::string, bool> varsb_gnclk;
 
 const char* sys_l[] = {
 	"", ".", ",", "-", "+", "*", "/", "(", ")", "&", "^", "%", "$", "#", "\"", "'", "\\"
@@ -408,26 +411,69 @@ void gnclk(const char* inp, int& pc) {
 	char n3[32];
 	int vald;
 	char valt[1024];
+	int valb;
 	char op;
-	if (skip_depth == 0 && func == 0) {
+	if (strncmp(inp, "stp", 3) == 0 && func == 0) {
+		if (depth>0) { 
+			depth--;
+			if (!p.empty()) {
+				p.pop_back();
+				if (depth<p.size()) skip_depth = p[depth];
+				else skip_depth = 0;
+			} else skip_depth = 0;
+		} else skip_depth = 0;
+	} else if (strncmp(inp, "endfunc", 7) == 0 && skip_depth == 1 && func == 1) {
+		func = 0;
+		skip_depth = 0;
+	} else if (skip_depth == 0 && func == 0) {
 		if (sscanf(inp, "print(\"%[^\"]\");", str) == 1) {
 				printf("%s\n", str);
 		} else if (sscanf(inp, "int %31[A-Za-z] = %d;", name, &vald) == 2) {
-			if (varsd_gnclk.count(name)) printf("DefineError: this variable is defined\n");
+			if (varsd_gnclk.count(name)) {
+				printf("DefineError: this variable is defined\n");
+				ferr = true;
+				return;
+			}
 			else varsd_gnclk[name] = vald;
 		} else if (sscanf(inp, "txt %31[A-Za-z] = \"%[^\"]\";", name, valt) >= 2) {
-			if (varst_gnclk.count(name)) printf("DefineError: this variable is defined\n");
+			if (varst_gnclk.count(name)) {
+				printf("DefineError: this variable is defined\n");
+				ferr = true;
+				return;
+			}
 			else varst_gnclk[name] = (strlen(valt) > 0) ? valt : "";
+		} else if (sscanf(inp, "bool %31[A-Za-z] = %1[01];", name, &valb) >= 2) {
+			if (varsb_gnclk.count(name)) {
+				printf("DefineError: this variable is defined\n");
+				ferr = true;
+				return;
+			}
+			else varsb_gnclk[name] = valb;
 		} else if (sscanf(inp, "printd(%31[A-Za-z]);", name) == 1) {
 			if (varsd_gnclk.count(name)) printf("%d\n", varsd_gnclk[name]);
 		} else if (sscanf(inp, "printt(%31[A-Za-z]);", name) == 1) {
 			if (varst_gnclk.count(name)) printf("%s\n", varst_gnclk[name].c_str());
 		} else if (sscanf(inp, "%31[A-Za-z] i= %d;", name, &vald) == 2) {
 			if (varsd_gnclk.count(name)) varsd_gnclk[name] = vald;
-			else printf("DefineError: this variable is not defined\n");
+			else { 
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
 		} else if (sscanf(inp, "%31[A-Za-z] t= \"%[^\"]\";", name, &valt) == 2) {
 			if (varst_gnclk.count(name)) varst_gnclk[name] = valt;
-			else printf("DefineError: this variable is not defined\n");
+			else {
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "%31[A-Za-z] b= %1[01];", name, &valb) == 2) {
+			if (varsb_gnclk.count(name)) varsb_gnclk[name] = valb;
+			else {
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
 		} else if (strcmp(inp, "$use gncsa") == 0) {
 			gncsab = true;
 		} else if (sscanf(inp, "gncsa(%1023[0-9 ]);", str) == 1) {
@@ -436,6 +482,8 @@ void gnclk(const char* inp, int& pc) {
 			if (varsd_gnclk.count(n1) && varsd_gnclk.count(n2)) logic = (varsd_gnclk[n1] == varsd_gnclk[n2]);
 		} else if (sscanf(inp, "cmpt(%31[A-Za-z],%31[A-Za-z]);", n1, n2) == 2) {
 			if (varst_gnclk.count(n1) && varst_gnclk.count(n2)) logic = (varst_gnclk[n1] == varst_gnclk[n2]);
+		} else if (sscanf(inp, "setl(%31[A-Za-z]);", n1) == 1) {
+			if (varsb_gnclk.count(n1)) logic = varsb_gnclk[n1];
 		} else if (strcmp(inp, "printl();") == 0) {
 			printf("%d\n", logic);
 		} else if (strncmp(inp, "ifl", 3) == 0) {
@@ -507,20 +555,20 @@ void gnclk(const char* inp, int& pc) {
 				else if (op == '#' && varsd_gnclk[n1]>=0 && varsd_gnclk[n2]%2!=0) varsd_gnclk[n3] = std::pow(varsd_gnclk[n1], 1/varsd_gnclk[n2]);
 				else if (op == '&' && varsd_gnclk[n1]>0 && varsd_gnclk[n2]>0) varsd_gnclk[n3] = log(varsd_gnclk[n1])/log(varsd_gnclk[n2]); 
 			}
+		} else if(sscanf(inp, "jmp(%d);", &vald) == 1) {
+			int ti = vald-1;
+			int d = abs(ti-pc);
+			if (d>50 || ti<0 || ti>=total_lines) {
+				printf("JumpError: i can't jump too far");
+			} else {
+				pc = ti-1;
+				depth = 0;
+				skip_depth = 0;
+			}
+		} else if (strncmp(inp, "ferr();", 7) == 0) {
+			ferr = true;
+			return;
 		}
-	}
-	if (strncmp(inp, "stp", 3) == 0 && func == 0) {
-		if (depth>0) { 
-			depth--;
-			if (!p.empty()) {
-				p.pop_back();
-				if (depth<p.size()) skip_depth = p[depth];
-				else skip_depth = 0;
-			} else skip_depth = 0;
-		} else skip_depth = 0;
-	} else if (strncmp(inp, "endfunc", 7) == 0 && skip_depth == 1 && func == 1) {
-		func = 0;
-		skip_depth = 0;
 	}
 }
 
@@ -679,9 +727,6 @@ namespace ai {
 		return result;
 	}
 }
-
-char* program[65536];
-int total_lines = 0;
 
 void load_file(const char* filename) {
     FILE* file = fopen(filename, "r");
@@ -907,7 +952,12 @@ int main(){
 			int pc = 0;
 			while (pc < total_lines) {
 				if (!ferr) {
-    				gnclk(program[pc], pc);
+					char cl[1024];
+					strncpy(cl,program[pc],sizeof(cl));
+					cl[sizeof(cl)-1] = '\0';
+					char* cptr = strstr(cl, " ;-");
+					if (cptr) *cptr = '\0';
+    				gnclk(cl, pc);
     			}
     			pc++;
     		}
