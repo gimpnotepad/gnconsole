@@ -79,3 +79,39 @@ calc(x + add) -> x;
 jmp(4);
 printd(x);
 ```
+
+# Your CPU name (+ Type)
+```
+cpuinfo(2147483650) -> a, b, c, d;
+uint2txt4l(a) -> s1;
+printt(s1);
+uint2txt4l(b) -> s2;
+printt(s2);
+uint2txt4l(c) -> s1;
+printt(s1);
+uint2txt4l(d) -> s2;
+printt(s2);
+cpuinfo(2147483651) -> a, b, c, d;
+uint2txt4l(a) -> s1;
+printt(s1);
+uint2txt4l(b) -> s2;
+printt(s2);
+uint2txt4l(c) -> s1;
+printt(s1);
+uint2txt4l(d) -> s2;
+printt(s2);
+cpuinfo(2147483652) -> a, b, c, d;
+uint2txt4l(a) -> s1;
+printt(s1);
+uint2txt4l(b) -> s2;
+printt(s2);
+uint2txt4l(c) -> s1;
+printt(s1);
+uint2txt4l(d) -> s2;
+printt(s2);
+lf();
+cpuinfo(0) -> a, b, c, d;
+uint2txt(b, d, c) -> s;
+printt(s);
+lf();
+```
