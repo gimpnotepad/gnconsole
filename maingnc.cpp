@@ -37,7 +37,9 @@ get [x] | get the value of variable x
 savevar | save variables to a file
 loadvar | load variables from a file
 gnclk | GNCLK programming language (Files only)
-bcalc | Bit calculator)"},
+bcalc | Bit calculator
+hex [num]
+hexv [x])"},
 	{"on", "on"},
 	{"info", "Information"},
 	{"warn", "Warning"},
@@ -91,7 +93,9 @@ get [x] | Hole den Wert der Variablen x
 savevar | Speichere Variablen in einer Datei
 loadvar | Lade Variablen aus einer Datei
 gnclk | GNCLK-Programmiersprache (nur Dateien)
-bcalc | Bitrechner)"},
+bcalc | Bitrechner
+hex [num]
+hexv [x])"},
 	{"on", "auf"},
 	{"info", "Info"},
 	{"warn", "Warnung"},
@@ -146,7 +150,9 @@ get [x] | получить значение переменной x
 savevar | сохранить переменные в файл
 loadvar | загрузить переменные из файла
 gnclk | язык программирования GNCLK (Только файлы)
-bcalc | битовой калькулятор)"},
+bcalc | битовой калькулятор
+hex [num]
+hexv [x])"},
 	{"on", "на"},
 	{"info", "Информация"},
 	{"warn", "Предупреждение"},
@@ -200,7 +206,9 @@ get [x] | polutiżd znacene x
 savevar | sokrani peremenie w fil
 loadvar | zargine peremenie iz fil
 gnclk | lengse kod GNCLK (tolke fils)
-bcalc | bittjeżdekelkretor)"},
+bcalc | bittjeżdekelkretor
+hex [num]
+hexv [x])"},
 	{"on", "re"},
 	{"info", "Nsew"},
 	{"warn", "Loedar"},
@@ -255,7 +263,9 @@ get [x] | pobierz wartość zmiennej x
 savevar | zapisz zmienne do pliku
 loadvar | załaduj zmienne z pliku
 gnclk | Język programowania GNCLK (tylko pliki)
-bcalc | Kalkulator bitowy)"},
+bcalc | Kalkulator bitowy
+hex [num]
+hexv [x])"},
 {"on", "na"},
 {"info", "Informacje"},
 {"warn", "Ostrzeżenie"},
@@ -287,6 +297,60 @@ miau
 {"notfound", "Ten program nie jest obecny w konsoli GimpNotatnik. (lub argumenty są pusty/niepoprawny/niekompletny)"},
 {"choosefile","Wybierz plik według nazwy:"}
 };
+std::map<std::string,std::string> what = {
+	{"about", "Консоль меня из 2026"},
+	{"lang", "Ну блиииииииин! не сменяй пж! Хотя ладно, давай, \nпиши язык:"},
+	{"help", R"(==== HELP ====
+lang | не надо пжпжпжпжпж
+exit | пока
+help | какой-то список
+about | ну и что
+systeminfo | докажи, что ты с винды 7, как разработчик
+random [min] [max] | число лол
+color [num] | краска
+cls | ща почищу
+calc | читы для егэ
+browser | тупой текст
+ai | иишка реальная гпт 100% официальная не шутка скачать бесплатно без регистрации и смс с вирусами
+print [text] | пукнуть в консоль с помощью текст
+gncsa [numbers] | херня эта лучше print
+set [x] [num] | переменные 
+get [x] | какашка
+savevar | мб попробовать создать свой файл для gnclk
+loadvar | что
+gnclk | дебильный яп
+bcalc | суперчиты для информатики
+hexv [x]
+hex [num])"},
+	{"on", "в"},
+	{"info", "Фигня"},
+	{"warn", "Щас покакаю"},
+	{"err", "Насрал в раковину"},
+	{"log:loaded", "Программа насрала в раковину"},
+	{"log:nulllang", "Фухххх"},
+	{"browser", R"(Тупой браузер
+https херня, лучше использовать gncb
+
+Хайповые сайты:
+gncb://gncb.run
+gncb://max.run
+gncb>)"},
+	{"browser:gncbrun", R"(
+	САЙТ ОЗНАКОМЛЕНИЯ ЧЕГО-ТО
+	
+	HTML фигня полная
+	используй консоль
+)"},
+	{"browser:maxrun", R"(
+MAX.RUN
+Сайт моего говнюка
+
+мяу
+)"},
+	{"meow", "мяу"},
+	{"notfound", "Что ты несёшь вообще"},
+	{"choosefile", "Хммммммммммм:"}
+};
 
 int lang = 0;
 bool debug = 0;
@@ -296,6 +360,7 @@ int color = 7;
 std::vector<int> p = {0};
 std::map<std::string, int> f = {};
 bool gncsab = false;
+bool gnsys = false;
 bool logic = false;
 int depth = 0;
 int skip_depth = 0;
@@ -309,6 +374,8 @@ int total_lines = 0;
 std::map<std::string, int> varsd_gnclk;
 std::map<std::string, std::string> varst_gnclk;
 std::map<std::string, bool> varsb_gnclk;
+std::map<std::string, double> varsdbl_gnclk;
+std::map<std::string, unsigned int> varsdu_gnclk;
 
 const char* sys_l[] = {
 	"", ".", ",", "-", "+", "*", "/", "(", ")", "&", "^", "%", "$", "#", "\"", "'", "\\"
@@ -332,6 +399,48 @@ const char* pl_gn_l[] = {
 	"Ą", "Ć", "Ę", "Ł", "Ń", "Ó", "Ś", "Ź", "Ż",
     "ą", "ć", "ę", "ł", "ń", "ó", "ś", "ź", "ż"
 };
+
+std::string findstr(std::string str){
+	if (lang == 0) {
+		auto i = en.find(str);
+		if (i != en.end()){
+			return i->second;		
+		}
+	} else if (lang == 1) {
+		auto i = de.find(str);
+		if (i != de.end()){
+			return i->second;		
+		}
+	} else if (lang == 2) {
+		auto i = ru.find(str);
+		if (i != ru.end()){
+			return i->second;		
+		}
+	} else if (lang == 3) {
+		auto i = gn.find(str);
+		if (i != gn.end()){
+			return i->second;		
+		}
+	} else if (lang == 4) {
+		auto i = pl.find(str);
+		if (i != pl.end()){
+			return i->second;		
+		}
+	} else if (lang == 5) {
+		auto i = what.find(str);
+		if (i != what.end()) return i->second;
+	}
+	return "";
+}
+
+std::string p2dp(std::string str) {
+	std::string result;
+	for (char c : str) {
+		if (c == '%') result += "%%";
+		else result += c;
+	}
+	return result;
+}
 
 void calc(const char* inp) {
 	double calc1, calc2;
@@ -409,10 +518,18 @@ void gnclk(const char* inp, int& pc) {
 	char n1[32];
 	char n2[32];
 	char n3[32];
+	char n4[32];
+	char nout[32];
+	char nin[32];
+	char s1[1024];
+	char s2[1024];
 	int vald;
 	char valt[1024];
 	int valb;
+	unsigned int valdu;
 	char op;
+	char tail[1024];
+	double valdbl;
 	if (strncmp(inp, "stp", 3) == 0 && func == 0) {
 		if (depth>0) { 
 			depth--;
@@ -427,7 +544,7 @@ void gnclk(const char* inp, int& pc) {
 		skip_depth = 0;
 	} else if (skip_depth == 0 && func == 0) {
 		if (sscanf(inp, "print(\"%[^\"]\");", str) == 1) {
-				printf("%s\n", str);
+				printf("%s", str);
 		} else if (sscanf(inp, "int %31[A-Za-z] = %d;", name, &vald) == 2) {
 			if (varsd_gnclk.count(name)) {
 				printf("DefineError: this variable is defined\n");
@@ -449,10 +566,30 @@ void gnclk(const char* inp, int& pc) {
 				return;
 			}
 			else varsb_gnclk[name] = valb;
+		} else if (sscanf(inp, "dbl %31[A-Za-z] = %lf;", name, &valdbl) >= 2) {
+			if (varsdbl_gnclk.count(name)) {
+				printf("DefineError: this variable is defined\n");
+				ferr = true;
+				return;
+			}
+			else varsdbl_gnclk[name] = valdbl;
+		} else if (sscanf(inp, "uint %31[A-Za-z] = %u;", name, &valdu) == 2) {
+			if (varsdu_gnclk.count(name)) {
+				printf("DefineError: this variable is defined\n");
+				ferr = true;
+				return;
+			}
+			else varsdu_gnclk[name] = valdu;
 		} else if (sscanf(inp, "printd(%31[A-Za-z]);", name) == 1) {
-			if (varsd_gnclk.count(name)) printf("%d\n", varsd_gnclk[name]);
+			if (varsd_gnclk.count(name)) printf("%d", varsd_gnclk[name]);
+		} else if (sscanf(inp, "printdu(%31[A-Za-z]);", name) == 1) {
+			if (varsdu_gnclk.count(name)) printf("%u", varsdu_gnclk[name]);
 		} else if (sscanf(inp, "printt(%31[A-Za-z]);", name) == 1) {
-			if (varst_gnclk.count(name)) printf("%s\n", varst_gnclk[name].c_str());
+			if (varst_gnclk.count(name)) printf("%s", varst_gnclk[name].c_str());
+		} else if (sscanf(inp, "printdbl(%31[A-Za-z]);", name) == 1) {
+			if (varsdbl_gnclk.count(name)) printf("%lf", varsdbl_gnclk[name]);
+		} else if (strncmp(inp, "lf();",10) == 0) {
+			printf("\n");
 		} else if (sscanf(inp, "%31[A-Za-z] i= %d;", name, &vald) == 2) {
 			if (varsd_gnclk.count(name)) varsd_gnclk[name] = vald;
 			else { 
@@ -474,15 +611,47 @@ void gnclk(const char* inp, int& pc) {
 				ferr = true;
 				return;
 			}
+		} else if (sscanf(inp, "%31[A-Za-z] dbl= %lf;", name, &valdbl) == 2) {
+			if (varsdbl_gnclk.count(name)) varsdbl_gnclk[name] = vald;
+			else { 
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "%31[A-Za-z] ui= %d;", name, &valdu) == 2) {
+			if (varsdu_gnclk.count(name)) varsdu_gnclk[name] = valdu;
+			else { 
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "inc(%31[A-Za-z]);", name) == 1) {
+			if (varsd_gnclk.count(name)) varsd_gnclk[name]++;
+			else { 
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "sub(%31[A-Za-z]);", name) == 1) {
+			if (varsd_gnclk.count(name)) varsd_gnclk[name]--;
+			else { 
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
 		} else if (strcmp(inp, "$use gncsa") == 0) {
 			gncsab = true;
 		} else if (sscanf(inp, "gncsa(%1023[0-9 ]);", str) == 1) {
 			if (gncsab) gncsa(str);
 		} else if (sscanf(inp, "cmpd(%31[A-Za-z],%31[A-Za-z]);", n1, n2) == 2) {
 			if (varsd_gnclk.count(n1) && varsd_gnclk.count(n2)) logic = (varsd_gnclk[n1] == varsd_gnclk[n2]);
+		} else if (sscanf(inp, "cmpdu(%31[A-Za-z],%31[A-Za-z]);", n1, n2) == 2) {
+			if (varsdu_gnclk.count(n1) && varsdu_gnclk.count(n2)) logic = (varsdu_gnclk[n1] == varsdu_gnclk[n2]);
 		} else if (sscanf(inp, "cmpt(%31[A-Za-z],%31[A-Za-z]);", n1, n2) == 2) {
 			if (varst_gnclk.count(n1) && varst_gnclk.count(n2)) logic = (varst_gnclk[n1] == varst_gnclk[n2]);
-		} else if (sscanf(inp, "setl(%31[A-Za-z]);", n1) == 1) {
+		} else if (sscanf(inp, "cmpdbl(%31[A-Za-z],%31[A-Za-z]);", n1, n2) == 2) {
+			if (varsdbl_gnclk.count(n1) && varsdbl_gnclk.count(n2)) logic = (varsdbl_gnclk[n1] == varsdbl_gnclk[n2]);
+		}else if (sscanf(inp, "setl(%31[A-Za-z]);", n1) == 1) {
 			if (varsb_gnclk.count(n1)) logic = varsb_gnclk[n1];
 		} else if (strcmp(inp, "printl();") == 0) {
 			printf("%d\n", logic);
@@ -545,6 +714,26 @@ void gnclk(const char* inp, int& pc) {
 					}
 				}
 			}
+		} else if (sscanf(inp, "inputdu(%31[A-Za-z]);", name) == 1) {
+			if (varsdu_gnclk.count(name)) {
+				char in[1024];
+				if (fgets(in, sizeof(in), stdin)) {
+					unsigned int t_v;
+					if (sscanf(in, "%u", &t_v) == 1) {
+						varsdu_gnclk[name] = t_v;
+					}
+				}
+			}
+		} else if (sscanf(inp, "inputdbl(%31[A-Za-z]);", name) == 1) {
+			if (varsdbl_gnclk.count(name)) {
+				char in[1024];
+				if (fgets(in, sizeof(in), stdin)) {
+					double t_v;
+					if (sscanf(in, "%lf", &t_v) == 1) {
+						varsdbl_gnclk[name] = t_v;
+					}
+				}
+			}
 		} else if(sscanf(inp, "calc(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
 			if (varsd_gnclk.count(n1) && varsd_gnclk.count(n2) && varsd_gnclk.count(n3)) {
 				if (op == '+') varsd_gnclk[n3] = varsd_gnclk[n1] + varsd_gnclk[n2];
@@ -554,6 +743,22 @@ void gnclk(const char* inp, int& pc) {
 				else if (op == '^') varsd_gnclk[n3] = std::pow(varsd_gnclk[n1],varsd_gnclk[n2]);
 				else if (op == '#' && varsd_gnclk[n1]>=0 && varsd_gnclk[n2]%2!=0) varsd_gnclk[n3] = std::pow(varsd_gnclk[n1], 1/varsd_gnclk[n2]);
 				else if (op == '&' && varsd_gnclk[n1]>0 && varsd_gnclk[n2]>0) varsd_gnclk[n3] = log(varsd_gnclk[n1])/log(varsd_gnclk[n2]); 
+				else if (op == '%' && varsd_gnclk[n2]>0) varsd_gnclk[n3] = varsd_gnclk[n1] % varsd_gnclk[n2];
+			}
+		} else if(sscanf(inp, "calcdbl(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
+			if (varsdbl_gnclk.count(n1) && varsdbl_gnclk.count(n2) && varsdbl_gnclk.count(n3)) {
+				if (op == '+') varsdbl_gnclk[n3] = varsdbl_gnclk[n1] + varsdbl_gnclk[n2];
+				else if (op == '-') varsdbl_gnclk[n3] = varsdbl_gnclk[n1] - varsdbl_gnclk[n2];
+				else if (op == '*') varsdbl_gnclk[n3] = varsdbl_gnclk[n1] * varsdbl_gnclk[n2];
+				else if (op == '/' && varsdbl_gnclk[n2] > 0) varsdbl_gnclk[n3] = varsdbl_gnclk[n1] / varsdbl_gnclk[n2];
+				else if (op == '^') varsdbl_gnclk[n3] = std::pow(varsdbl_gnclk[n1],varsdbl_gnclk[n2]);
+				else if (op == '#' && varsdbl_gnclk[n1]>=0 && fmod(varsdbl_gnclk[n2], 2.0) != 0.0) varsdbl_gnclk[n3] = std::pow(varsdbl_gnclk[n1], 1/varsdbl_gnclk[n2]);
+				else if (op == '&' && varsdbl_gnclk[n1]>0 && varsdbl_gnclk[n2]>0) varsdbl_gnclk[n3] = log(varsdbl_gnclk[n1])/log(varsdbl_gnclk[n2]); 
+				else if (op == '%' && varsd_gnclk[n2]>0) varsdbl_gnclk[n3] = fmod(varsdbl_gnclk[n1],varsdbl_gnclk[n2]);
+			}
+		} else if(sscanf(inp, "rnd(%31[A-Za-z], %31[A-Za-z]) -> %31[A-Za-z];", n1, n2, n3) == 3) {
+			if (varsd_gnclk.count(n1) && varsd_gnclk.count(n2)) { 
+				varsd_gnclk[n3] = randomint(varsd_gnclk[n1], varsd_gnclk[n2]);
 			}
 		} else if(sscanf(inp, "jmp(%d);", &vald) == 1) {
 			int ti = vald-1;
@@ -568,6 +773,79 @@ void gnclk(const char* inp, int& pc) {
 		} else if (strncmp(inp, "ferr();", 7) == 0) {
 			ferr = true;
 			return;
+		} else if (strncmp(inp, "$use gnsys", 10) == 0) {
+			gnsys = true;
+		} else if (strncmp(inp, "cls();", 6) == 0) {
+			if (gnsys) system("cls");
+		} else if (sscanf(inp, "color(%d);", &vald) == 1) {
+			if (gnsys) set_console_color(vald);
+		} else if (sscanf(inp, "colord(%31[A-Za-z]);", name) == 1) {
+			if (gnsys && varsd_gnclk.count(name)) set_console_color(varsd_gnclk[name]);
+		} else if (sscanf(inp, "iss(%31[A-Za-z], \"%1023[^\"]\", \"%1023[^\"]\", %31[A-Za-z], %31[A-Za-z]) -> %31[A-Za-z], %31[A-Za-z];", n1, s1, s2, n2, n3, nout, nin) == 7) {
+			std::string sr1, sr2;
+			if (varst_gnclk.count(n1) && varst_gnclk.count(n2) && varst_gnclk.count(n3) && varst_gnclk.count(nout) && varsd_gnclk.count(nin)) {
+				if (strchr(s1, '%') != nullptr || strchr(s2, '%') != nullptr) {
+					sr1 = p2dp(std::string(s1));
+					sr2 = p2dp(std::string(s2));
+				} else {
+					sr1 = s1;
+					sr2 = s2;
+				}
+				std::string d = std::string("%1023[^")+std::string(1,sr1[0])+std::string("]")+std::string(sr1)+std::string("%1023[^")+std::string(1,sr2[0])+std::string("]")+std::string(sr2);
+				char buf1[1024];
+				char buf2[1024];
+				varsd_gnclk[nin] = sscanf(varst_gnclk[n1].c_str(), d.c_str(), buf1, buf2);
+				varst_gnclk[n2] = buf1;
+				varst_gnclk[n3] = buf2;
+				std::string r = buf1+std::string(s1)+buf2+std::string(s2);
+				varst_gnclk[nout] = varst_gnclk[n1].substr(r.length());
+			}
+		} else if (sscanf(inp, "txt2int(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			int b;
+			if (sscanf(varst_gnclk[n1].c_str(), "%d", &b) == 1) varsd_gnclk[n2] = b;
+		} else if (sscanf(inp, "txt2dbl(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			double b;
+			if (sscanf(varst_gnclk[n1].c_str(), "%lf", &b) == 1) varsdbl_gnclk[n2] = b;
+		} else if (sscanf(inp, "getntver(%31[A-Za-z]);", name) == 1) {
+			if (gnsys) varst_gnclk[name] = get_nt_ver();
+		} else if (sscanf(inp, "getsysarch(%31[A-Za-z]);", name) == 1) {
+			if (gnsys) varst_gnclk[name] = get_sysarch();
+		} else if (sscanf(inp, "getpcname(%31[A-Za-z]);", name) == 1) {
+			if (gnsys) varst_gnclk[name] = get_pc_name();
+		} else if (sscanf(inp, "getusername(%31[A-Za-z]);", name) == 1) {
+			if (gnsys) varst_gnclk[name] = get_user_name();
+		} else if (strncmp(inp, "resetcolor();", 13) == 0) {
+			if (gnsys) set_console_color(color);
+		} else if (sscanf(inp, "logmessage(%31[A-Za-z], %31[A-Za-z]) -> %31[A-Za-z];", n1, n2, name) == 3) {
+			if (varst_gnclk.count(n1) && varst_gnclk.count(n2) && gnsys) varst_gnclk[name] = log_message(varst_gnclk[n1].c_str(), varst_gnclk[n2].c_str());
+		} else if (sscanf(inp, "findstr(%31[A-Za-z]) -> %31[A-Za-z];", n1, n2) == 2) {
+			if (varst_gnclk.count(n1) && gnsys) varst_gnclk[n2] = findstr(varst_gnclk[n1]);
+		} else if (sscanf(inp, "nullxor(%31[A-Za-z]);", name) == 1) {
+			if (varsd_gnclk.count(name)) asm volatile("xor %0, %0":"=r"(varsd_gnclk[name]));
+		} else if (sscanf(inp, "gettsc() -> %31[A-Za-z], %31[A-Za-z];", n1, n2) == 2) {
+			asm volatile("rdtsc":"=a"(varsd_gnclk[n1]),"=d"(varsd_gnclk[n2]));
+		} else if (sscanf(inp, "cpuinfo(%u) -> %31[A-Za-z], %31[A-Za-z], %31[A-Za-z], %31[A-Za-z];", &valdu, n1, n2, n3, n4) == 5) {
+			asm volatile ("cpuid":"=a"(varsdu_gnclk[n1]),"=b"(varsdu_gnclk[n2]),"=c"(varsdu_gnclk[n3]),"=d"(varsdu_gnclk[n4]):"a"(valdu));
+		} else if (sscanf(inp, "uint2txt(%31[A-Za-z], %31[A-Za-z], %31[A-Za-z]) -> %31[A-Za-z];", n1, n2, n3, name) == 4) {
+			if (varsdu_gnclk.count(n1) && varsdu_gnclk.count(n2) && varsdu_gnclk.count(n3)) {
+				unsigned int i1 = varsdu_gnclk[n1];
+				unsigned int i2 = varsdu_gnclk[n2];
+				unsigned int i3 = varsdu_gnclk[n3];
+				char str[13];
+				memcpy(str, &i1, 4);
+				memcpy(str+4, &i2, 4);
+				memcpy(str+8, &i3, 4);
+				str[12] = '\0';
+				varst_gnclk[name] = std::string(str);
+			}
+		} else if (sscanf(inp, "uint2txt4l(%31[A-Za-z]) -> %31[A-Za-z];", n1, n2) == 2) {
+			if (varsdu_gnclk.count(n1)) {
+				unsigned int i1 = varsdu_gnclk[n1];
+				char buf[5];
+				memcpy(buf, &i1, 4);
+				buf[4] = '\0';
+				varst_gnclk[std::string(n2)] = std::string(buf);
+			}
 		}
 	}
 }
@@ -577,36 +855,6 @@ void errorhappened(const char* err) {
 	system("cls");
 	printf("%s", err);
 	while (true) {}
-}
-
-std::string findstr(std::string str){
-	if (lang == 0) {
-		auto i = en.find(str);
-		if (i != en.end()){
-			return i->second;		
-		}
-	} else if (lang == 1) {
-		auto i = de.find(str);
-		if (i != de.end()){
-			return i->second;		
-		}
-	} else if (lang == 2) {
-		auto i = ru.find(str);
-		if (i != ru.end()){
-			return i->second;		
-		}
-	} else if (lang == 3) {
-		auto i = gn.find(str);
-		if (i != gn.end()){
-			return i->second;		
-		}
-	} else if (lang == 4) {
-		auto i = pl.find(str);
-		if (i != pl.end()){
-			return i->second;		
-		}
-	}
-	return "";
 }
 
 void changef(std::filesystem::path setf, std::string a, std::string b){
@@ -779,6 +1027,7 @@ int main(){
 						else if (v == "ru") lang = 2;
 						else if (v == "gn") lang = 3;
 						else if (v == "pl") lang = 4;
+						else if (v == "what") lang = 5;
 						else if (v == "en") lang = 0;
 					} else if (k == "debug"){
 						if (v == "1") debug = true;
@@ -829,6 +1078,9 @@ int main(){
 			} else if (strcmp(inp, "pl") == 0) {
 				changef(setf,"lang=","lang=pl");
 				lang=4;
+			} else if (strcmp(inp, "what") == 0) {
+				changef(setf,"lang=","lang=what");
+				lang=5;
 			} else {
 				if (debug) printf("%s", log_message(findstr("log:nulllang").c_str(),findstr("warn").c_str()));
 			}
@@ -964,6 +1216,8 @@ int main(){
     		if (depth != 0) {
     			printf("Stopped on depth No. %d\n", depth);
 			}
+			gncsab = false;
+			gnsys = false;
 			ferr = false;
 		} else {
 			printf("%s", log_message(findstr("notfound").c_str(), findstr("err").c_str()));
