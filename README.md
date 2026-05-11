@@ -83,6 +83,7 @@ lf();
 ```
 
 # Your CPU name
+## Output version
 ```
 cpuinfo(2147483650) -> a, b, c, d;
 uint2txt4l(a) -> s1;
@@ -111,5 +112,19 @@ uint2txt4l(c) -> s1;
 printt(s1);
 uint2txt4l(d) -> s2;
 printt(s2);
+lf();
+```
+## Variable version
+```
+cpuinfo(2147483650) -> a, b, c, d;
+uint2txt16l(a, b, c, d) -> s;
+t.add(s);
+cpuinfo(2147483651) -> a, b, c, d;
+uint2txt16l(a, b, c, d) -> s;
+t.add(s);
+cpuinfo(2147483652) -> a, b, c, d;
+uint2txt16l(a, b, c, d) -> s;
+t.add(s);
+printt(t);
 lf();
 ```
