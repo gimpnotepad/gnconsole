@@ -79,6 +79,7 @@ printd(x);
 calc(x + add) -> x;
 jmp(4);
 printd(x);
+lf();
 ```
 
 # Your CPU name
