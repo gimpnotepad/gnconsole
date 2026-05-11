@@ -63,6 +63,7 @@ inputd(cs);
 print("func:");
 inputt(f);
 callfunc(calcu);
+lf();
 ```
 
 ## Counter from 0 to 10:
