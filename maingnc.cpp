@@ -352,6 +352,86 @@ MAX.RUN
 	{"choosefile", "Хммммммммммм:"}
 };
 
+class TenPow {
+public:
+	double m;
+	int e;
+	TenPow(double man = 0, double ex = 0) : m(man), e(ex) {
+		normalize();
+	}
+	void normalize() {
+		if (m == 0) {e = 0; return;}
+		while (abs(m) >= 10.0) {
+			m /= 10.0;
+			e++;
+		}
+		while (abs(m) < 1.0 && m != 0) {
+			m *= 10.0;
+			e--;
+		}
+		if (e > 2047 || e < -2048) {
+			m = 0;
+			e = 0;
+		}
+	}
+	TenPow operator*(const TenPow& other) const {
+		return TenPow(m*other.m, e+other.e);
+	}
+	TenPow operator+(const TenPow& other) const {
+		const TenPow* big = this;
+		const TenPow* small = &other;
+		if (big->e < small->e) std::swap(big, small);
+		int diff = big->e - small->e;
+		if (diff > 16) return *big;
+		double shifted_m = small->m / std::pow(10.0, diff);
+		return TenPow(big->m + shifted_m, big->e);
+	}
+	TenPow operator/(const TenPow& other) const {
+		if (other.m == 0) return TenPow(0,0);
+		return TenPow(m/other.m,e-other.e);
+	}
+	TenPow operator-(const TenPow& other) const {
+		if (e - other.e > 16) return *this;
+		if (other.e - e > 16) return TenPow(-other.m, other.e);
+		if (e >= other.e) {
+			int diff = e - other.e;
+			double shifted_m = other.m / std::pow(10.0, diff);
+			return TenPow(m - shifted_m, e);
+		} else {
+			int diff = other.e - e;
+			double shifted_m = m / std::pow(10.0, diff);
+			return TenPow(shifted_m - other.m, e);
+		}
+	}
+	bool operator==(const TenPow& other) const {
+		return other.e == e && other.m == m;
+	}
+	bool operator>(const TenPow& other) const {
+		return other.e < e && other.m < m;
+	}
+	bool operator<(const TenPow& other) const {
+		return other.e > e && other.m > m;
+	}
+};
+
+void print10p(const TenPow& val) {
+	if (val.e < 0) { printf("%ge%d", val.m, val.e); return; }
+	long long in = (long long)val.m;
+	printf("%lld", in);
+	double fr = val.m - in;
+	int z2a = val.e;
+	for (int i = 0; i < 15 && fr > 0 && z2a > 0; ++i) {
+		fr *= 10;
+		int d = (int)fr;
+		putchar(d+'0');
+		fr -= d;
+		z2a--;
+	}
+	for (int i = 0; i< z2a; ++i) {
+		putchar('0');
+	}
+}
+
 int lang = 0;
 bool debug = 0;
 std::string name = "gnc";
@@ -380,6 +460,7 @@ std::map<std::string, double> varsdbl_gnclk;
 std::map<std::string, unsigned int> varsdu_gnclk;
 std::map<std::string, long long int> varsll_gnclk;
 std::map<std::string, uint64_t> varsllu_gnclk;
+std::map<std::string, TenPow> vars10p_gnclk;
 
 const char* sys_l[] = {
 	"", ".", ",", "-", "+", "*", "/", "(", ")", "&", "^", "%", "$", "#", "\"", "'", "\\"
@@ -626,6 +707,18 @@ void gnclk(const char* inp, int& pc) {
 				return;
 			}
 			else varsll_gnclk[name] = valll;
+		} else if (sscanf(inp, "10p %31[A-Za-z] = %lf * 10^%d;", name, &valdbl, &vald) == 3) {
+			if (vars10p_gnclk.count(name)) {
+				printf("DefineError: this variable is defined\n");
+				ferr = true;
+				return;
+			}
+			else if (!ll) {
+				printf("DefineError: use $use ll to continue.");
+				ferr = true;
+				return;
+			}
+			else vars10p_gnclk[name] = TenPow(valdbl, vald);
 		} else if (sscanf(inp, "llu %31[A-Za-z] = %llu;", name, &valllu) == 2) {
 			if (varsllu_gnclk.count(name)) {
 				printf("DefineError: this variable is defined\n");
@@ -642,6 +735,13 @@ void gnclk(const char* inp, int& pc) {
 			if (varsd_gnclk.count(name)) printf("%d", varsd_gnclk[name]);
 		} else if (sscanf(inp, "printll(%31[A-Za-z]);", name) == 1) {
 			if (varsll_gnclk.count(name)) printf("%lld", varsll_gnclk[name]);
+			else if (!ll) {
+				printf("OutputError: use $use ll to continue\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "print10p(%31[A-Za-z]);", name) == 1) {
+			if (vars10p_gnclk.count(name)) print10p(vars10p_gnclk[name]);
 			else if (!ll) {
 				printf("OutputError: use $use ll to continue\n");
 				ferr = true;
@@ -709,6 +809,18 @@ void gnclk(const char* inp, int& pc) {
 				ferr = true;
 				return;
 			}
+		} else if (sscanf(inp, "%31[A-Za-z] 10p= %lf * 10^%d;", name, &valdbl, &vald) == 3) {
+			if (vars10p_gnclk.count(name)) vars10p_gnclk[name] = TenPow(valdbl, vald);
+			else if (!ll) {
+				printf("DefineError: use $use ll to continue.");
+				ferr = true;
+				return;
+			}
+			else { 
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
 		} else if (sscanf(inp, "%31[A-Za-z] llu= %llu;", name, &valllu) == 2) {
 			if (varsllu_gnclk.count(name)) varsllu_gnclk[name] = valllu;
 			else if (!ll) {
@@ -743,6 +855,13 @@ void gnclk(const char* inp, int& pc) {
 			if (varsd_gnclk.count(n1) && varsd_gnclk.count(n2)) logic = (varsd_gnclk[n1] == varsd_gnclk[n2]);
 		} else if (sscanf(inp, "cmpll(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
 			if (varsll_gnclk.count(n1) && varsll_gnclk.count(n2)) logic = (varsll_gnclk[n1] == varsll_gnclk[n2]);
+			else if (!ll) {
+				printf("CompareError: use $use ll to continue\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "cmp10p(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (vars10p_gnclk.count(n1) && vars10p_gnclk.count(n2)) logic = (vars10p_gnclk[n1] == vars10p_gnclk[n2]);
 			else if (!ll) {
 				printf("CompareError: use $use ll to continue\n");
 				ferr = true;
@@ -798,6 +917,20 @@ void gnclk(const char* inp, int& pc) {
 			}
 		} else if (sscanf(inp, "cmpllub(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
 			if (varsllu_gnclk.count(n1) && varsllu_gnclk.count(n2)) logic = (varsllu_gnclk[n1] > varsllu_gnclk[n2]);
+			else if (!ll) {
+				printf("CompareError: use $use ll to continue\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "cmp10pb(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (vars10p_gnclk.count(n1) && vars10p_gnclk.count(n2)) logic = (vars10p_gnclk[n1] > vars10p_gnclk[n2]);
+			else if (!ll) {
+				printf("CompareError: use $use ll to continue\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "cmp10pl(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (vars10p_gnclk.count(n1) && vars10p_gnclk.count(n2)) logic = (vars10p_gnclk[n1] < vars10p_gnclk[n2]);
 			else if (!ll) {
 				printf("CompareError: use $use ll to continue\n");
 				ferr = true;
@@ -865,12 +998,27 @@ void gnclk(const char* inp, int& pc) {
 				}
 			}
 		} else if (sscanf(inp, "inputll(%31[A-Za-z]);", name) == 1) {
-			if (varsd_gnclk.count(name)) {
+			if (varsll_gnclk.count(name)) {
 				char in[1024];
 				if (fgets(in, sizeof(in), stdin)) {
 					long long int t_v;
 					if (sscanf(in, "%lld", &t_v) == 1) {
 						varsll_gnclk[name] = t_v;
+					}
+				}
+			} else if (!ll) {
+				printf("InputError: use $use ll to continue\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "input10p(%31[A-Za-z]);", name) == 1) {
+			if (vars10p_gnclk.count(name)) {
+				char in[1024];
+				if (fgets(in, sizeof(in), stdin)) {
+					double t_v1;
+					int t_v2;
+					if (sscanf(in, "%lf * 10^%d", &t_v1, &t_v2) == 2) {
+						vars10p_gnclk[name] = TenPow(t_v1, t_v2);
 					}
 				}
 			} else if (!ll) {
@@ -908,6 +1056,13 @@ void gnclk(const char* inp, int& pc) {
 				else if (op == '#' && varsd_gnclk[n1]>=0 && varsd_gnclk[n2]%2!=0) varsd_gnclk[n3] = std::pow(varsd_gnclk[n1], 1/varsd_gnclk[n2]);
 				else if (op == '&' && varsd_gnclk[n1]>0 && varsd_gnclk[n2]>0) varsd_gnclk[n3] = log(varsd_gnclk[n1])/log(varsd_gnclk[n2]); 
 				else if (op == '%' && varsd_gnclk[n2]>0) varsd_gnclk[n3] = varsd_gnclk[n1] % varsd_gnclk[n2];
+			}
+		}else if(sscanf(inp, "calc10p(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
+			if (vars10p_gnclk.count(n1) && vars10p_gnclk.count(n2) && vars10p_gnclk.count(n3)) {
+				if (op == '+') vars10p_gnclk[n3] = vars10p_gnclk[n1] + vars10p_gnclk[n2];
+				else if (op == '-') vars10p_gnclk[n3] = vars10p_gnclk[n1] - vars10p_gnclk[n2];
+				else if (op == '*') vars10p_gnclk[n3] = vars10p_gnclk[n1] * vars10p_gnclk[n2];
+				else if (op == '/') vars10p_gnclk[n3] = vars10p_gnclk[n1] / vars10p_gnclk[n2];
 			}
 		} else if(sscanf(inp, "calcu(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
 			if (varsdu_gnclk.count(n1) && varsdu_gnclk.count(n2) && varsdu_gnclk.count(n3)) {
@@ -1504,6 +1659,7 @@ int main(){
 			varsllu_gnclk.clear();
 			varsdbl_gnclk.clear();
 			varsdu_gnclk.clear();
+			vars10p_gnclk.clear();
 			load_file(filename);
 			int pc = 0;
 			while (pc < total_lines) {
