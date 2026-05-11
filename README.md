@@ -80,7 +80,7 @@ jmp(4);
 printd(x);
 ```
 
-# Your CPU name (+ Type)
+# Your CPU name
 ```
 cpuinfo(2147483650) -> a, b, c, d;
 uint2txt4l(a) -> s1;
@@ -109,9 +109,5 @@ uint2txt4l(c) -> s1;
 printt(s1);
 uint2txt4l(d) -> s2;
 printt(s2);
-lf();
-cpuinfo(0) -> a, b, c, d;
-uint2txt(b, d, c) -> s;
-printt(s);
 lf();
 ```
