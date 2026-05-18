@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "gndll.h" // check on https://github.com/gimpnotepad/gndll/releases/
+#include "gnt.h" // https://github.com/gimpnotepad/gntypes/releases/
 
 std::map<std::string,std::string> en = {
 	{"about", "Gimpnotepad's Console, 2026."},
@@ -461,6 +462,8 @@ std::map<std::string, unsigned int> varsdu_gnclk;
 std::map<std::string, long long int> varsll_gnclk;
 std::map<std::string, uint64_t> varsllu_gnclk;
 std::map<std::string, TenPow> vars10p_gnclk;
+std::map<std::string, int4> varsd4_gnclk;
+std::map<std::string, uint4> varsdu4_gnclk;
 
 const char* sys_l[] = {
 	"", ".", ",", "-", "+", "*", "/", "(", ")", "&", "^", "%", "$", "#", "\"", "'", "\\"
@@ -695,6 +698,20 @@ void gnclk(const char* inp, int& pc) {
 				return;
 			}
 			else varsdu_gnclk[name] = valdu;
+		} else if (sscanf(inp, "int4 %31[A-Za-z] = %d;", name, &vald) == 2) {
+			if (varsd4_gnclk.count(name)) {
+				printf("DefineError: this variable is defined\n");
+				ferr = true;
+				return;
+			}
+			else varsd4_gnclk[name] = vald;
+		}  else if (sscanf(inp, "uint4 %31[A-Za-z] = %u;", name, &valdu) == 2) {
+			if (varsdu4_gnclk.count(name)) {
+				printf("DefineError: this variable is defined\n");
+				ferr = true;
+				return;
+			}
+			else varsdu4_gnclk[name] = valdu;
 		} else if (sscanf(inp, "ll %31[A-Za-z] = %lld;", name, &valll) == 2) {
 			if (varsll_gnclk.count(name)) {
 				printf("DefineError: this variable is defined\n");
@@ -756,6 +773,10 @@ void gnclk(const char* inp, int& pc) {
 			}
 		} else if (sscanf(inp, "printdu(%31[A-Za-z]);", name) == 1) {
 			if (varsdu_gnclk.count(name)) printf("%u", varsdu_gnclk[name]);
+		} else if (sscanf(inp, "printdu4(%31[A-Za-z]);", name) == 1) {
+			if (varsdu4_gnclk.count(name)) varsdu4_gnclk[name].print();
+		} else if (sscanf(inp, "printd4(%31[A-Za-z]);", name) == 1) {
+			if (varsd4_gnclk.count(name)) varsd4_gnclk[name].print();
 		} else if (sscanf(inp, "printt(%31[A-Za-z]);", name) == 1) {
 			if (varst_gnclk.count(name)) printf("%s", varst_gnclk[name].c_str());
 		} else if (sscanf(inp, "printdbl(%31[A-Za-z]);", name) == 1) {
@@ -792,6 +813,20 @@ void gnclk(const char* inp, int& pc) {
 			}
 		} else if (sscanf(inp, "%31[A-Za-z] ui= %d;", name, &valdu) == 2) {
 			if (varsdu_gnclk.count(name)) varsdu_gnclk[name] = valdu;
+			else { 
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "%31[A-Za-z] ui4= %d;", name, &valdu) == 2) {
+			if (varsdu4_gnclk.count(name)) varsdu4_gnclk[name] = valdu;
+			else { 
+				printf("DefineError: this variable is not defined\n");
+				ferr = true;
+				return;
+			}
+		} else if (sscanf(inp, "%31[A-Za-z] i4= %d;", name, &vald) == 2) {
+			if (varsd4_gnclk.count(name)) varsd4_gnclk[name] = vald;
 			else { 
 				printf("DefineError: this variable is not defined\n");
 				ferr = true;
@@ -936,6 +971,18 @@ void gnclk(const char* inp, int& pc) {
 				ferr = true;
 				return;
 			}
+		} else if (sscanf(inp, "cmpd4(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (varsd4_gnclk.count(n1) && varsd4_gnclk.count(n2)) logic = (varsd4_gnclk[n1] == varsd4_gnclk[n2]);
+		} else if (sscanf(inp, "cmpd4l(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (varsd4_gnclk.count(n1) && varsd4_gnclk.count(n2)) logic = (varsd4_gnclk[n1] < varsd4_gnclk[n2]);
+		} else if (sscanf(inp, "cmpd4b(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (varsd4_gnclk.count(n1) && varsd4_gnclk.count(n2)) logic = (varsd4_gnclk[n1] > varsd4_gnclk[n2]);
+		} else if (sscanf(inp, "cmpdu4(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (varsdu4_gnclk.count(n1) && varsdu4_gnclk.count(n2)) logic = (varsdu4_gnclk[n1] == varsdu4_gnclk[n2]);
+		} else if (sscanf(inp, "cmpdu4l(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (varsdu4_gnclk.count(n1) && varsdu4_gnclk.count(n2)) logic = (varsdu4_gnclk[n1] < varsdu4_gnclk[n2]);
+		} else if (sscanf(inp, "cmpdu4b(%31[A-Za-z], %31[A-Za-z]);", n1, n2) == 2) {
+			if (varsdu4_gnclk.count(n1) && varsdu4_gnclk.count(n2)) logic = (varsdu4_gnclk[n1] > varsdu4_gnclk[n2]);
 		} else if (strcmp(inp, "printl();") == 0) {
 			printf("%d", logic);
 		} else if (strncmp(inp, "ifl", 3) == 0) {
@@ -1036,6 +1083,26 @@ void gnclk(const char* inp, int& pc) {
 					}
 				}
 			}
+		} else if (sscanf(inp, "inputdu4(%31[A-Za-z]);", name) == 1) {
+			if (varsdu4_gnclk.count(name)) {
+				char in[1024];
+				if (fgets(in, sizeof(in), stdin)) {
+					unsigned int t_v;
+					if (sscanf(in, "%u", &t_v) == 1) {
+						varsdu4_gnclk[name] = t_v;
+					}
+				}
+			}
+		} else if (sscanf(inp, "inputd4(%31[A-Za-z]);", name) == 1) {
+			if (varsd4_gnclk.count(name)) {
+				char in[1024];
+				if (fgets(in, sizeof(in), stdin)) {
+					int t_v;
+					if (sscanf(in, "%d", &t_v) == 1) {
+						varsd4_gnclk[name] = t_v;
+					}
+				}
+			}
 		} else if (sscanf(inp, "inputdbl(%31[A-Za-z]);", name) == 1) {
 			if (varsdbl_gnclk.count(name)) {
 				char in[1024];
@@ -1057,12 +1124,30 @@ void gnclk(const char* inp, int& pc) {
 				else if (op == '&' && varsd_gnclk[n1]>0 && varsd_gnclk[n2]>0) varsd_gnclk[n3] = log(varsd_gnclk[n1])/log(varsd_gnclk[n2]); 
 				else if (op == '%' && varsd_gnclk[n2]>0) varsd_gnclk[n3] = varsd_gnclk[n1] % varsd_gnclk[n2];
 			}
-		}else if(sscanf(inp, "calc10p(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
+		} else if(sscanf(inp, "calc10p(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
 			if (vars10p_gnclk.count(n1) && vars10p_gnclk.count(n2) && vars10p_gnclk.count(n3)) {
 				if (op == '+') vars10p_gnclk[n3] = vars10p_gnclk[n1] + vars10p_gnclk[n2];
 				else if (op == '-') vars10p_gnclk[n3] = vars10p_gnclk[n1] - vars10p_gnclk[n2];
 				else if (op == '*') vars10p_gnclk[n3] = vars10p_gnclk[n1] * vars10p_gnclk[n2];
 				else if (op == '/') vars10p_gnclk[n3] = vars10p_gnclk[n1] / vars10p_gnclk[n2];
+			} else if (!ll) {
+				printf("CalcError: use $use ll to continue\n");
+				ferr = true;
+				return;
+			}
+		} else if(sscanf(inp, "calc4(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
+			if (varsd4_gnclk.count(n1) && varsd4_gnclk.count(n2) && varsd4_gnclk.count(n3)) {
+				if (op == '+') varsd4_gnclk[n3] = varsd4_gnclk[n1] + varsd4_gnclk[n2];
+				else if (op == '-') varsd4_gnclk[n3] = varsd4_gnclk[n1] - varsd4_gnclk[n2];
+				else if (op == '*') varsd4_gnclk[n3] = varsd4_gnclk[n1] * varsd4_gnclk[n2];
+				else if (op == '/') varsd4_gnclk[n3] = varsd4_gnclk[n1] / varsd4_gnclk[n2];
+			}
+		} else if(sscanf(inp, "calc4(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
+			if (varsd4_gnclk.count(n1) && varsd4_gnclk.count(n2) && varsd4_gnclk.count(n3)) {
+				if (op == '+') varsd4_gnclk[n3] = varsd4_gnclk[n1] + varsd4_gnclk[n2];
+				else if (op == '-') varsd4_gnclk[n3] = varsd4_gnclk[n1] - varsd4_gnclk[n2];
+				else if (op == '*') varsd4_gnclk[n3] = varsd4_gnclk[n1] * varsd4_gnclk[n2];
+				else if (op == '/') varsd4_gnclk[n3] = varsd4_gnclk[n1] / varsd4_gnclk[n2];
 			}
 		} else if(sscanf(inp, "calcu(%31[A-Za-z] %c %31[A-Za-z]) -> %31[A-Za-z];", n1, &op, n2, n3) == 4) {
 			if (varsdu_gnclk.count(n1) && varsdu_gnclk.count(n2) && varsdu_gnclk.count(n3)) {
@@ -1660,6 +1745,8 @@ int main(){
 			varsdbl_gnclk.clear();
 			varsdu_gnclk.clear();
 			vars10p_gnclk.clear();
+			varsd4_gnclk.clear();
+			varsdu4_gnclk.clear();
 			load_file(filename);
 			int pc = 0;
 			while (pc < total_lines) {
